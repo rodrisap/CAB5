@@ -124,3 +124,6 @@
     near(C.revolver(2e6, 1.5e6, 0.005, 112500).rate, 0.0767, 0.001, 'REH revolver'); near(C.cp(1e6, 995000, 90).ear, 0.02054, 0.002, 'Bertram CP EAR');
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) { var K = root.FSM.known, C = root.FSM.calc;
+  K.ch19 = function (near) { near(C.ppp(1.2, 0, 0.1), 1.0909, 0.0005, 'Rolex PPP'); near(C.irp(0.69444, 0.005, 0.01), 0.691, 0.0005, 'Australia IRP'); };
+})(typeof window !== 'undefined' ? window : globalThis);
