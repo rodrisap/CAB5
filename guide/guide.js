@@ -48,11 +48,14 @@
   scrim.onclick = closeMenu;
 
   /* ---------- reading rows ---------- */
+  function pagesFor(r) { return R.pages(r.id) || (r.pages ? { from: r.pages[0], to: r.pages[1], preset: true } : null); }
+  var READ = {};
   function readingRow(r) {
-    var pg = R.pages(r.id), link = R.link(r.book);
+    READ[r.id] = r;
+    var pg = pagesFor(r), link = R.link(r.book);
     var book = R.BOOKS[r.book];
     return '<div class="reading' + (done['read:' + r.id] ? ' done' : '') + '" data-rid="' + r.id + '" data-book="' + r.book + '">' +
-      '<div class="meta"><b>' + esc(r.ref) + ' — ' + esc(r.title) + '</b><small>' + esc(book.title) + (pg ? ' · pages ' + pg.from + '–' + pg.to : '') + '</small>' + (r.note ? '<div class="small">' + esc(r.note) + '</div>' : '') + '</div>' +
+      '<div class="meta"><b>' + esc(r.ref) + ' — ' + esc(r.title) + '</b><small>' + esc(book.title) + (pg ? ' · PDF pages ' + pg.from + '–' + pg.to + (pg.preset ? ' (pre-set for your PDF)' : '') : '') + '</small>' + (r.note ? '<div class="small">' + esc(r.note) + '</div>' : '') + '</div>' +
       '<div class="acts"><button type="button" class="act-open">Open in my book</button><button type="button" class="ghost act-pages">' + (pg ? 'Edit pages' : 'Set pages') + '</button>' +
       '<label class="check"><input type="checkbox" class="act-done"' + (done['read:' + r.id] ? ' checked' : '') + '> Read</label></div>' +
       '<div class="pages-form" style="display:none;flex-basis:100%"><span class="small">PDF pages</span><input type="number" min="1" class="pf-from" value="' + (pg ? pg.from : '') + '" placeholder="from"><input type="number" min="1" class="pf-to" value="' + (pg ? pg.to : '') + '" placeholder="to"><button type="button" class="ghost pf-save">Save</button><span class="small muted">Use the page numbers your PDF viewer shows (they can differ from the printed numbers).</span></div></div>';
@@ -73,7 +76,7 @@
 
   /* ---------- reader overlay ---------- */
   function openReading(rid, book, title) {
-    var pg = R.pages(rid), link = R.link(book);
+    var pg = READ[rid] ? pagesFor(READ[rid]) : R.pages(rid), link = R.link(book);
     R.get(book).then(function (rec) {
       if (!rec) {
         if (link) { window.open(link, '_blank', 'noopener'); return; }

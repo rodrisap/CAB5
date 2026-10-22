@@ -170,7 +170,23 @@
       { term: 'Profitability ratios', cat: 'cat', defs: ['Measure earnings relative to sales, assets or equity (margins, ROA, ROE, EPS).'] },
       { term: 'Market ratios', cat: 'cat', defs: ['Show how investors value the company relative to earnings and book value (P/E, market-to-book).'] },
       { term: 'Earnings available for common stockholders', cat: 'x', defs: ['Net profit after taxes minus preferred dividends — the numerator of EPS, ROA, ROE and net profit margin.'] },
-      { term: 'Common stock equity', cat: 'x', defs: ['Total equity minus preferred stock — used for ROE, D/E and book value per share.'] }
+      { term: 'Common stock equity', cat: 'x', defs: ['Total equity minus preferred stock — used for ROE, D/E and book value per share.'] },
+      { term: 'Cross-sectional analysis', cat: 'm', defs: ['Comparing different firms\' ratios at the same point in time, e.g. against competitors or the industry average.'] },
+      { term: 'Benchmarking', cat: 'm', defs: ['Cross-sectional analysis against key competitors or firms you want to emulate.'] },
+      { term: 'Time-series analysis', cat: 'm', defs: ['Evaluating a firm\'s ratios over time to spot trends.'] },
+      { term: 'Combined analysis', cat: 'm', defs: ['Looking at the trend of a firm\'s ratio against the trend of the industry — the most informative approach.'] },
+      { term: 'Income statement', cat: 'fs', defs: ['Summary of the firm\'s operating results over a period: revenue down to net income and EPS.'] },
+      { term: 'Balance sheet', cat: 'fs', defs: ['Summary of the firm\'s financial position at a point in time: assets = liabilities + equity.'] },
+      { term: 'Statement of cash flows', cat: 'fs', defs: ['Summary of operating, investment and financing cash flows, reconciled with the change in cash and marketable securities.'] },
+      { term: 'Statement of stockholders\' equity', cat: 'fs', defs: ['Shows all equity-account transactions in a year; the statement of retained earnings is a short form of it.'] },
+      { term: 'Notes to the financial statements', cat: 'fs', defs: ['Explanations of accounting policies, calculations and transactions behind the numbers (revenue recognition, debt and lease terms, contingencies).'] },
+      { term: 'GAAP', cat: 'rule', defs: ['Generally accepted accounting principles: the US rules for preparing financial statements, set by the FASB.'] },
+      { term: 'IFRS', cat: 'rule', defs: ['International Financial Reporting Standards, set by the IASB and required in 90+ countries.'] },
+      { term: 'PCAOB', cat: 'rule', defs: ['Board created by Sarbanes-Oxley to oversee the auditors of public companies.'] },
+      { term: 'Form 10-K', cat: 'rule', defs: ['Annual report filed with the SEC containing audited financial statements in full detail; 10-Q is the quarterly version.'] },
+      { term: 'Retained earnings', cat: 'fs', defs: ['Cumulative earnings kept and reinvested since the start (net of dividends) — not a pile of cash.'] },
+      { term: 'Paid-in capital in excess of par', cat: 'fs', defs: ['What investors paid for shares above their (arbitrary) par value when the stock was first sold.'] },
+      { term: 'Current rate (translation) method', cat: 'rule', defs: ['Translating a foreign subsidiary\'s assets and liabilities at the year-end exchange rate (equity at the historical rate) for consolidation.'] }
     ],
     groups: {
       'Liquidity ratios': ['Current ratio', 'Quick ratio'],
@@ -183,14 +199,24 @@
       { q: ['An apartment owner has a current ratio of 1.3, a manufacturer 4.2. Why can the landlord live with less liquidity?'], a: 'Liquidity ratios', opts: ['Market ratios', 'Profitability ratios', 'Debt ratios'], why: 'Stable rental income needs less working capital than a manufacturer — compare ratios within an industry, not across industries.' },
       { q: ['Which category answers: “Can the firm pay its bills due in the next 12 months?”'], a: 'Liquidity ratios' },
       { q: ['Which category answers: “How quickly does the firm turn inventory and receivables into sales and cash?”'], a: 'Activity ratios' },
-      { q: ['Which category answers: “How much does the market pay per euro of earnings?”'], a: 'Market ratios' }
+      { q: ['Which category answers: “How much does the market pay per euro of earnings?”'], a: 'Market ratios' },
+      { q: ['You compare this year\'s current ratio of your company with its current ratios of the past five years. What type of analysis?'], a: 'Time-series analysis', opts: ['Cross-sectional analysis', 'Benchmarking', 'Combined analysis'] },
+      { q: ['You compare your firm\'s net margin with three rivals and the industry average for the same year. What type of analysis?'], a: 'Cross-sectional analysis', opts: ['Time-series analysis', 'Combined analysis', 'Liquidity ratios'] },
+      { q: ['Which statement shows where cash came from and went to, split into operating, investment and financing activities?'], a: 'Statement of cash flows', opts: ['Income statement', 'Balance sheet', 'Statement of stockholders\' equity'] },
+      { q: ['Where would you look to find out how a company recognises revenue or what its lease terms are?'], a: 'Notes to the financial statements', opts: ['Income statement', 'Balance sheet', 'Statement of cash flows'] }
     ],
     tf: [
       { s: 'A ratio is good or bad on its own, without comparing it to peers.', t: false, why: 'Ratios are meant for comparison with competitors/industry and over time.' },
       { s: 'Comparing ratios of a software firm and a restaurant chain directly can be misleading.', t: true, why: 'Ratios differ structurally across industries.' },
       { s: 'A real-estate company can carry more debt than a software company partly because its buildings can secure the loans.', t: true, why: 'Stable cash flows and collateral support debt.' },
       { s: 'DuPont analysis is part of the FSM exam material.', t: false, why: 'Chapter 3 is studied except DuPont.' },
-      { s: 'Investing in several lower-margin firms can be wise because diversification reduces risk.', t: true, why: 'Higher margins may come with higher volatility.' }
+      { s: 'Investing in several lower-margin firms can be wise because diversification reduces risk.', t: true, why: 'Higher margins may come with higher volatility.' },
+      { s: 'An inventory turnover far above the industry average always means excellent inventory management.', t: false, why: 'It can mean too little stock → stockouts, production delays and lost sales. Ratios only flag areas to investigate.' },
+      { s: 'Ratios of firms with different fiscal year-ends can safely be compared.', t: false, why: 'Use statements from the same point in the year — seasonality distorts comparisons.' },
+      { s: 'High inflation can make older firms look more efficient and profitable than newer ones.', t: true, why: 'Old assets are carried at low historical book values.' },
+      { s: 'Creditors mainly care about the firm\'s short-term liquidity and ability to pay interest and principal.', t: true, why: 'Shareholders focus on level and risk of earnings; management on everything.' },
+      { s: 'Retained earnings represent cash the firm can spend.', t: false, why: 'They are earnings already reinvested in the business.' },
+      { s: 'A single ratio is usually enough to judge a firm\'s overall performance.', t: false, why: 'Use several ratios across categories.' }
     ]
   });
 })(typeof window !== 'undefined' ? window : globalThis);
