@@ -131,3 +131,6 @@
   K.ch12_13 = function (near) { var x = C.recap({ value: 180e6, shares: 1e6, debt: 90e6, rd: 0.07, nop: [9e6, 18e6, 27e6] });
     near(x.eps1[1], 23.40, 1e-6, 'EMC EPS normal'); near(x.eps1[0], 5.40, 1e-6, 'EMC EPS recession'); near(x.indiff, 12.6e6, 1e-9, 'EMC indifference'); near(C.beCF(10000, 0.10, 15), 1314.74, 1e-4, 'break-even CF'); };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) { var K = root.FSM.known, C = root.FSM.calc;
+  K.langley9 = function (near) { var e = C.eoq(3600, 200, 100, 0.25); near(e.Q, 240, 1e-9, 'Langley EOQ'); near(e.tac, 6000, 1e-9, 'Langley TAC'); near(C.safety(10, 1.63, 1315, 271), 2308.42, 1e-3, 'Langley safety stock'); };
+})(typeof window !== 'undefined' ? window : globalThis);
