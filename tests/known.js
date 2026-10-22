@@ -127,3 +127,7 @@
 (function (root) { var K = root.FSM.known, C = root.FSM.calc;
   K.ch19 = function (near) { near(C.ppp(1.2, 0, 0.1), 1.0909, 0.0005, 'Rolex PPP'); near(C.irp(0.69444, 0.005, 0.01), 0.691, 0.0005, 'Australia IRP'); };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) { var K = root.FSM.known, C = root.FSM.calc;
+  K.ch12_13 = function (near) { var x = C.recap({ value: 180e6, shares: 1e6, debt: 90e6, rd: 0.07, nop: [9e6, 18e6, 27e6] });
+    near(x.eps1[1], 23.40, 1e-6, 'EMC EPS normal'); near(x.eps1[0], 5.40, 1e-6, 'EMC EPS recession'); near(x.indiff, 12.6e6, 1e-9, 'EMC indifference'); near(C.beCF(10000, 0.10, 15), 1314.74, 1e-4, 'break-even CF'); };
+})(typeof window !== 'undefined' ? window : globalThis);
