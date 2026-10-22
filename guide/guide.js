@@ -50,15 +50,24 @@
   /* ---------- reading rows ---------- */
   function pagesFor(r) { return R.pages(r.id) || (r.pages ? { from: r.pages[0], to: r.pages[1], preset: true } : null); }
   var READ = {};
+  function summaryHTML(id) {
+    var S = (window.FSM_SUMMARIES || {})[id]; if (!S) return '';
+    var h = '<p class="sum-big">' + S.big + '</p>';
+    S.parts.forEach(function (pt) { h += '<h4>' + pt.h + '</h4><ul>' + pt.li.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>'; });
+    if (S.example) h += '<div class="sum-ex"><b>Example:</b> ' + S.example.q + '<ol>' + S.example.steps.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol></div>';
+    if (S.remember) h += '<div class="sum-rem"><b>Remember for the exam</b><ul>' + S.remember.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
+    return h;
+  }
   function readingRow(r) {
     READ[r.id] = r;
     var pg = pagesFor(r), link = R.link(r.book);
     var book = R.BOOKS[r.book];
     return '<div class="reading' + (done['read:' + r.id] ? ' done' : '') + '" data-rid="' + r.id + '" data-book="' + r.book + '">' +
       '<div class="meta"><b>' + esc(r.ref) + ' — ' + esc(r.title) + '</b><small>' + esc(book.title) + (pg ? ' · PDF pages ' + pg.from + '–' + pg.to + (pg.preset ? ' (pre-set for your PDF)' : '') : '') + '</small>' + (r.note ? '<div class="small">' + esc(r.note) + '</div>' : '') + '</div>' +
-      '<div class="acts"><button type="button" class="act-open">Open in my book</button><button type="button" class="ghost act-pages">' + (pg ? 'Edit pages' : 'Set pages') + '</button>' +
+      '<div class="acts">' + ((window.FSM_SUMMARIES || {})[r.id] ? '<button type="button" class="ghost act-sum">Summary</button>' : '') + '<button type="button" class="act-open">Open in my book</button><button type="button" class="ghost act-pages">' + (pg ? 'Edit pages' : 'Set pages') + '</button>' +
       '<label class="check"><input type="checkbox" class="act-done"' + (done['read:' + r.id] ? ' checked' : '') + '> Read</label></div>' +
-      '<div class="pages-form" style="display:none;flex-basis:100%"><span class="small">PDF pages</span><input type="number" min="1" class="pf-from" value="' + (pg ? pg.from : '') + '" placeholder="from"><input type="number" min="1" class="pf-to" value="' + (pg ? pg.to : '') + '" placeholder="to"><button type="button" class="ghost pf-save">Save</button><span class="small muted">Use the page numbers your PDF viewer shows (they can differ from the printed numbers).</span></div></div>';
+      '<div class="pages-form" style="display:none;flex-basis:100%"><span class="small">PDF pages</span><input type="number" min="1" class="pf-from" value="' + (pg ? pg.from : '') + '" placeholder="from"><input type="number" min="1" class="pf-to" value="' + (pg ? pg.to : '') + '" placeholder="to"><button type="button" class="ghost pf-save">Save</button><span class="small muted">Use the page numbers your PDF viewer shows (they can differ from the printed numbers).</span></div>' +
+      ((window.FSM_SUMMARIES || {})[r.id] ? '<div class="sum-panel" style="display:none">' + summaryHTML(r.id) + '</div>' : '') + '</div>';
   }
   function wireReadings(rootEl) {
     rootEl.querySelectorAll('.reading').forEach(function (row) {
@@ -70,6 +79,8 @@
         if (!a) { R.pages(rid, null); } else R.pages(rid, a, b && b >= a ? b : a);
         route();
       };
+      var sb = row.querySelector('.act-sum');
+      if (sb) sb.onclick = function () { var sp = row.querySelector('.sum-panel'), open = sp.style.display === 'none'; sp.style.display = open ? 'block' : 'none'; sb.textContent = open ? 'Hide summary' : 'Summary'; };
       row.querySelector('.act-open').onclick = function () { openReading(rid, book, row.querySelector('b').textContent); };
     });
   }
@@ -90,15 +101,17 @@
   function showReader(src, title, pg, rid) {
     var ov = document.createElement('div');
     ov.className = 'reader-ov';
-    ov.innerHTML = '<div class="reader-head"><div><b>' + esc(title) + '</b>' + (pg ? '<span class="small muted"> · read pages ' + pg.from + '–' + pg.to + '</span>' : '') + '</div><div class="acts"><a class="btn ghost" target="_blank" rel="noopener" href="' + src + '">Open full screen</a><button type="button" class="ghost" id="rdDone">Mark as read</button><button type="button" id="rdClose">Close</button></div></div><iframe title="Book" src="' + src + '"></iframe>';
+    ov.innerHTML = '<div class="reader-head"><div><b>' + esc(title) + '</b>' + (pg ? '<span class="small muted"> · read pages ' + pg.from + '–' + pg.to + '</span>' : '') + '</div><div class="acts">' + (summaryHTML(rid) ? '<button type="button" class="ghost" id="rdSum">Summary</button>' : '') + '<a class="btn ghost" target="_blank" rel="noopener" href="' + src + '">Open full screen</a><button type="button" class="ghost" id="rdDone">Mark as read</button><button type="button" id="rdClose">Close</button></div></div><div class="reader-body"><iframe title="Book" src="' + src + '"></iframe>' + (summaryHTML(rid) ? '<aside class="reader-sum" hidden><div class="sum-panel">' + summaryHTML(rid) + '</div></aside>' : '') + '</div>';
     document.body.appendChild(ov);
     document.body.style.overflow = 'hidden';
     function close() { ov.remove(); document.body.style.overflow = ''; }
     ov.querySelector('#rdClose').onclick = close;
+    var rs = ov.querySelector('#rdSum');
+    if (rs) rs.onclick = function () { var a = ov.querySelector('.reader-sum'); a.hidden = !a.hidden; rs.textContent = a.hidden ? 'Summary' : 'Hide summary'; };
     ov.querySelector('#rdDone').onclick = function () { done['read:' + rid] = true; store('fsm.guide.done', done); close(); route(); };
   }
   var css = document.createElement('style');
-  css.textContent = '.reader-ov{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column}.reader-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--surface)}.reader-head .acts{display:flex;gap:6px;flex-wrap:wrap}.reader-head .btn,.reader-head button{min-height:38px;padding:7px 12px}.reader-ov iframe{flex:1;border:0;width:100%;background:#fff}';
+  css.textContent = '.reader-ov{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column}.reader-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--surface)}.reader-head .acts{display:flex;gap:6px;flex-wrap:wrap}.reader-head .btn,.reader-head button{min-height:38px;padding:7px 12px}.reader-body{flex:1;display:flex;min-height:0}.reader-ov iframe{flex:1;border:0;width:100%;background:#fff;min-width:0}.reader-sum{width:min(440px,45%);overflow:auto;border-left:1px solid var(--line);background:var(--surface)}.reader-sum .sum-panel{border:0;margin:0}@media(max-width:700px){.reader-body{flex-direction:column}.reader-sum{width:auto;max-height:55%;border-left:0;border-top:1px solid var(--line);order:-1}}';
   document.head.appendChild(css);
 
   /* ---------- page rendering ---------- */

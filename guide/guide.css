@@ -77,3 +77,10 @@ mark { background: var(--warn-soft); color: inherit; padding: 0 2px; }
   .topbar nav a:first-child { display: none; }
   .searchbox { order: 5; flex-basis: 100%; max-width: none; }
 }
+.sum-panel { flex-basis: 100%; margin-top: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); line-height: 1.55; }
+.sum-panel .sum-big { font-weight: 600; margin: 0 0 8px; }
+.sum-panel h4 { margin: 14px 0 4px; font-size: .98rem; }
+.sum-panel ul, .sum-panel ol { margin: 4px 0; padding-left: 20px; }
+.sum-panel li { margin: 3px 0; }
+.sum-ex { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px dashed var(--line); }
+.sum-rem { margin-top: 12px; padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--accent, #5b3b78); background: var(--surface); }
