@@ -134,3 +134,13 @@
 (function (root) { var K = root.FSM.known, C = root.FSM.calc;
   K.langley9 = function (near) { var e = C.eoq(3600, 200, 100, 0.25); near(e.Q, 240, 1e-9, 'Langley EOQ'); near(e.tac, 6000, 1e-9, 'Langley TAC'); near(C.safety(10, 1.63, 1315, 271), 2308.42, 1e-3, 'Langley safety stock'); };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) { var K = root.FSM.known, C = root.FSM.calc;
+  K.mocks = function (near) {
+    near(C.wacc({ d: 28, p: 5, s: 49.5, rd: 2.4 / 28, rp: 0.06, rs: 0.078, T: 0.25 }).wacc, 0.072255, 1e-4, 'Mock1 WACC');
+    var x = C.credit({ P: 1, VC: 0.4, u0: 9.6e6, u1: 12e6, acp0: 45, acp1: 60, rrr: 0.10, b0: 0.012, b1: 0.025 });
+    near(x.dCM, 1440000, 1e-6, 'Mock1 dCM'); near(x.costAR, 78904.11, 1e-5, 'Mock1 AR cost'); near(x.net, 1176295.89, 1e-5, 'Mock1 net');
+    near(C.resourcesCCC(103.2323, 67.9306, 99.0714, 49.5, 90, 28).total, 23.15, 1e-3, 'Mock2 resources');
+    near(Math.pow(1 + 6 / 94, 365 / 120) - 1, 0.20708, 1e-4, 'Mock2 EAR discount loan');
+    near(C.dividendTax(650000, 350000, 0.30, false).payable + 350000, 545000, 1e-9, 'Mock2 tax a'); near(C.dividendTax(650000, 350000, 0.30, true).payable + 350000, 350000, 1e-9, 'Mock2 tax b');
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

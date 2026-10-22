@@ -129,6 +129,7 @@
     var h = '<div class="hero"><div><h1>Financial &amp; Supply Chain Management</h1><p class="muted">Every question is generated fresh: new numbers, wording, layout and question type. Memorising won\'t work — understanding will.</p></div>' +
       '<div class="countdown">' + (cd !== null ? '<b>' + (cd >= 0 ? cd : 0) + '</b><span class="muted">days to exam</span>' : '<a href="#settings">Set exam date</a>') + '</div></div>';
     if (S.last && FSM.skills[S.last.skill]) h += '<div class="btnrow"><a class="btn" href="#' + (S.last.mode === 'learn' ? 'learn=' + S.last.topic : 'drill=' + S.last.skill) + '">Continue: ' + esc(FSM.skills[S.last.skill].title) + '</a>' + (Object.keys(S.mistakes).length ? '<a class="btn ghost" href="#review">Review ' + Object.keys(S.mistakes).length + ' weak skills</a>' : '') + '</div>';
+    h += '<a class="card topic-card" href="case.html" style="border-color:var(--accent)"><span class="tag fin">Exam format</span><h3>Case exam: mock 1, mock 2 and new cases</h3><div class="small muted">One company case, 9 questions, 2 hours, pass at 55. Practise here once your skills are mastered.</div></a>';
     if (due.length) h += '<div class="card"><b>Spaced repetition:</b> ' + due.length + ' mastered skill(s) are due for a re-check. <a href="#drill=' + due[0] + '">Start</a></div>';
     ['Finance', 'Supply Chain'].forEach(function (area) {
       h += '<h2 class="section-title">' + area + ' <span class="tag ' + (area === 'Finance' ? 'fin' : 'scm') + '">' + (area === 'Finance' ? '70% of exam' : '30% of exam') + '</span></h2><div class="grid">';
@@ -395,7 +396,7 @@
 
   /* ---------------- exam ---------------- */
   function showExamStart() {
-    view.innerHTML = '<h1>Exam simulation</h1><div class="card"><p>A mixed paper: about 70% finance and 30% supply chain (by points). Mostly multi-part calculation cases plus concept questions. You can open the formula sheet any time. You get <b>no feedback until you submit</b>.</p>' +
+    view.innerHTML = '<h1>Exam simulation</h1><div class="card" style="border-color:var(--accent)"><b>Want it exactly like the real exam?</b> Use the <a href="case.html">case exam</a>: one company case, 9 open questions, 70 + 30 points, pass at 55, plus the two official mocks with worked solutions.</div><div class="card"><p>A quick mixed drill paper: about 70% finance and 30% supply chain (by points). Mostly multi-part calculation cases plus concept questions. You can open the formula sheet any time. You get <b>no feedback until you submit</b>.</p>' +
       '<div class="btnrow"><label>Duration (minutes) <input type="number" id="exMin" value="' + (S.settings.examMin || 120) + '" min="10" max="240" style="width:100px"></label></div>' +
       '<div class="btnrow"><button id="exGo" type="button">Start exam</button><a class="btn ghost" href="#home">Cancel</a></div></div>';
     document.getElementById('exGo').onclick = function () {
