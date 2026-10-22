@@ -113,3 +113,14 @@
   var FSM = root.FSM, K = FSM.known;
   K.tlc = function (near) { var t = FSM.calc.tlc; near(t(10000, 4000, 1000, 0.076).total, 16140, 1e-9, 'TLC China'); near(t(8000, 6000, 1500, 0.076).total, 16678, 1e-9, 'TLC Vietnam'); near(t(12000, 1200, 0, 0.076).total, 14203.2, 1e-9, 'TLC EU'); };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) {
+  var FSM = root.FSM, K = FSM.known;
+  K.semper = function (near) { var x = FSM.calc.fundingStrategy({ perm: 135000, avgSeasonal: 101250, peakSeasonal: 990000, rS: 0.0625, rL: 0.08, rInvest: 0.05 }); near(x.aggr, 17128.13, 1e-5, 'Semper aggressive'); near(x.cons, 45562.5, 1e-6, 'Semper conservative'); };
+})(typeof window !== 'undefined' ? window : globalThis);
+(function (root) {
+  var FSM = root.FSM, K = FSM.known, C = FSM.calc;
+  K.ch16 = function (near) {
+    near(C.compBalance(1e6, 0.08, 0.2, 0).rate, 0.10, 1e-9, 'Estrada comp balance'); near(C.compBalance(1e6, 0.08, 0.2, 100000).rate, 0.0889, 0.001, 'Estrada with 100k balance');
+    near(C.revolver(2e6, 1.5e6, 0.005, 112500).rate, 0.0767, 0.001, 'REH revolver'); near(C.cp(1e6, 995000, 90).ear, 0.02054, 0.002, 'Bertram CP EAR');
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
