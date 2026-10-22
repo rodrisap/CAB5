@@ -425,7 +425,6 @@
       { s: 'An increase in inventory is a cash outflow.', t: true, why: 'Higher current assets tie up cash.' },
       { s: 'An increase in accounts payable is a cash outflow.', t: false, why: 'Higher current liabilities mean you keep the cash longer — a cash inflow.' },
       { s: 'The cash conversion cycle can never be negative.', t: false, why: 'If you collect from customers before you pay suppliers (e.g. supermarkets), the CCC is negative.' },
-      { s: 'In this course, credit-policy questions are solved by looking only at the effects within the period, not with the book\'s capital-budgeting approach.', t: true, why: 'The instructor simplifies the book\'s method.' },
       { s: 'Working capital management aims to collect from customers as late as possible and pay suppliers as early as possible.', t: false, why: 'The opposite: collect early, pay late — without damaging relationships.' }
     ]
   });

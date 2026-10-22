@@ -35,30 +35,9 @@
     }
   });
 
-  FSM.addSkill({
-    id: 'fin_w5_project_risk', topic: 'fin_w5', title: 'Project risk: break-even cash inflow & scenario range',
-    formula: 'Break-even cash inflow = annuity payment that gives NPV = 0; range = NPV(best) − NPV(worst)',
-    build: function (r, c) {
-      var C = c.C, inv = r.range(10, 500, 5) * 1000, k = r.range(6, 14, 0.5) / 100, n = r.int(4, 15);
-      var be = FSM.calc.beCF(inv, k, n), af = (1 - Math.pow(1 + k, -n)) / k;
-      var cfs = [be * r.range(0.6, 0.9, 0.05), be * r.range(1.0, 1.2, 0.02), be * r.range(1.25, 1.6, 0.05)].map(function (v) { return h.r0(v / 100) * 100; });
-      var npv = cfs.map(function (cf) { return cf * af - inv; });
-      return {
-        intro: [c.company + ' considers a project costing ' + C(inv) + ' that gives equal annual cash inflows for ' + n + ' years. Its cost of capital is ' + F.num(k * 100, 1) + '%.'],
-        facts: [], layouts: ['sentence'],
-        parts: [
-          { ask: ['What is the minimum annual cash inflow for the project to be acceptable (NPV ≥ 0)?', 'What is the break-even cash inflow?'], answer: be, unit: 'cur', dp: 2, traps: [{ v: inv / n, why: 'This ignores the time value of money.' }, { v: inv * (1 + k) / n, why: 'Use the annuity formula.' }],
-            steps: [step('Annuity factor = (1 − (1 + ' + F.num(k * 100, 1) + '%)^−' + n + ') / ' + F.num(k * 100, 1) + '%', af, 'num', 'PV of 1 per year', 4), step('Break-even CF = ' + C(inv) + ' / annuity factor', be, 'cur', 'NPV = 0', 2)] },
-          { ask: ['Managers estimate annual inflows of ' + C(cfs[0]) + ' (pessimistic), ' + C(cfs[1]) + ' (most likely) and ' + C(cfs[2]) + ' (optimistic). What is the range of NPVs?'], answer: npv[2] - npv[0], unit: 'cur', dp: 0, traps: [{ v: cfs[2] - cfs[0], why: 'The range is between NPVs, not annual cash flows.' }],
-            steps: [step('NPV(optimistic) = ' + C(cfs[2]) + ' × ' + F.num(af, 4) + ' − ' + C(inv), npv[2], 'cur', 'best'), step('NPV(pessimistic) = ' + C(cfs[0]) + ' × ' + F.num(af, 4) + ' − ' + C(inv), npv[0], 'cur', 'worst'), step('Range = best − worst', npv[2] - npv[0], 'cur', 'scenario analysis')] },
-          { kind: 'choice', ask: ['What is the difference between sensitivity analysis and scenario analysis?'], choices: ['Sensitivity changes ONE input at a time; scenarios change several inputs together', 'Sensitivity uses probabilities; scenarios do not', 'They are the same', 'Scenarios change one input; sensitivity changes all inputs'], correctChoice: 0, why: 'Sensitivity analysis shows which single assumption moves NPV most; scenario analysis looks at whole worlds (worst/expected/best).' }
-        ]
-      };
-    }
-  });
 
   FSM.addConcepts({
-    id: 'fin_w5_book', topic: 'fin_w5', title: 'Book: project risk, capital structure & WACC',
+    id: 'fin_w5_book', topic: 'fin_w5', title: 'Capital structure & WACC concepts',
     items: [
       { term: 'Break-even cash inflow', cat: 'p', defs: ['The minimum level of annual cash inflow needed for a project to have NPV ≥ 0.'] },
       { term: 'Sensitivity analysis', cat: 'p', defs: ['Changing one NPV input at a time to see which assumption has the greatest effect.'] },
@@ -70,8 +49,6 @@
       { term: 'Financial risk', cat: 'c', defs: ['Extra risk to shareholders caused by the fixed cost of debt (and preferred dividends).'] },
       { term: 'Optimal capital structure', cat: 'c', defs: ['The debt/equity mix that minimises the WACC and so maximises firm value.'] },
       { term: 'M&M irrelevance', cat: 'c', defs: ['In a perfect market (no taxes or frictions, same borrowing rate, same information), capital structure does not change firm value.'] },
-      { term: 'Market value weights', cat: 'w', defs: ['WACC weights based on the market values of debt and equity; the book prefers these because they are forward-looking.'] },
-      { term: 'Target weights', cat: 'w', defs: ['WACC weights based on the capital structure the firm aims for, rather than the historical one.'] },
       { term: 'Hurdle rate', cat: 'w', defs: ['The minimum return a project must earn; the WACC is the right hurdle only for projects as risky as the firm\'s average.'] }
     ],
     groups: { 'Ways to look at project risk': ['Break-even cash inflow', 'Sensitivity analysis', 'Scenario analysis', 'Simulation'] },
@@ -82,7 +59,7 @@
       { q: ['A computer draws 10,000 random combinations of inputs to get a distribution of NPVs.'], a: 'Simulation' }
     ],
     tf: [
-      { s: 'The book uses MARKET value weights in the WACC; the course seminars use BOOK values from the balance sheet.', t: true, why: 'On the exam follow the course method (book weights, r_d = interest / LT debt) unless told otherwise.' },
+      { s: 'For the WACC you use book values from the balance sheet: long-term debt, preferred equity and common equity (including retained earnings).', t: true, why: 'Current liabilities are left out; r_d = interest on long-term debt ÷ long-term debt.' },
       { s: 'Leverage raises shareholders\' EPS whenever the return on assets is above the cost of debt.', t: true, why: 'Shareholders earn the positive spread on borrowed money; below the cost of debt the spread is negative.' },
       { s: 'More debt always raises the share price because expected EPS rises.', t: false, why: 'Risk rises too, so shareholders want a higher return; M&M show that in perfect markets the effects cancel.' },
       { s: 'The closer sales are to the operating break-even point, the higher the DOL.', t: true, why: 'Small EBIT base → large % changes.' },

@@ -2,7 +2,7 @@
 (function (root) {
   var FSM = root.FSM;
   FSM.addConcepts({
-    id: 'scm_ch1_book', topic: 'scm_ch1', title: 'Book: evolution, value chain & the financial link',
+    id: 'scm_ch1_book', topic: 'scm_ch1', title: 'Evolution, value chain & the financial link',
     items: [
       { term: 'Physical distribution (1960s)', cat: 'e', defs: ['The first phase: managing the OUTBOUND side (transport, warehousing, packaging, finished goods) as one system at lowest total cost.'] },
       { term: 'Integrated logistics (1980s)', cat: 'e', defs: ['The second phase: inbound and outbound logistics coordinated together, helped by transport deregulation (fewer empty backhauls).'] },
@@ -16,7 +16,7 @@
       { s: 'Supply chains affect cash flow through cost, revenue and asset (working capital) requirements: inventory, receivables and cash.', t: true, why: 'This is the bridge with the finance part: a shorter cash conversion cycle frees cash.' },
       { s: 'The GMA grocery study estimated $30bn of savings a year from cutting inventory from 104 to 61 days.', t: true, why: 'One of the two studies that gave SCM traction in the 1990s.' },
       { s: 'Best-in-class firms spent about 7% of sales on supply chain costs vs 13.1% for the median firm.', t: true, why: 'Supply Chain Council comparison.' },
-      { s: 'Technology should be introduced first; processes and employee training can follow.', t: false, why: 'Langley: technology should FOLLOW process change and employee education.' },
+      { s: 'Technology should be introduced first; processes and employee training can follow.', t: false, why: 'Technology should FOLLOW process change and employee education.' },
       { s: 'Integrated logistics added inbound logistics to physical distribution.', t: true, why: 'Physical distribution was outbound only.' }
     ],
     sequences: [
@@ -24,7 +24,7 @@
     ]
   });
   FSM.addConcepts({
-    id: 'scm_ch2_book', topic: 'scm_ch2', title: 'Book: global trade flows',
+    id: 'scm_ch2_book', topic: 'scm_ch2', title: 'Global trade flows',
     items: [
       { term: 'BRIC countries', cat: 'g', defs: ['Brazil, Russia, India, China: the leading emerging economies of the early 2000s.'] },
       { term: 'VISTA countries', cat: 'g', defs: ['Vietnam, Indonesia, South Africa, Turkey, Argentina: fast-developing economies whose future role is less clear.'] },

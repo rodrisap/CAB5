@@ -12,10 +12,10 @@
 
   /* ---------------- bank-loan costs ---------------- */
   FSM.addSkill({
-    id: 'fin_w4_bank_loans', topic: 'fin_w4', title: 'Bank loans: compensating balance, commitment fee, commercial paper',
-    formula: 'Effective rate = interest (+ fees) ÷ money you can actually use',
+    id: 'fin_w4_bank_loans', topic: 'fin_w4', title: 'Commercial paper & single-payment notes (EAR)',
+    formula: 'r_p = interest ÷ money received · EAR = (1 + r_p)^(365/days) − 1',
     build: function (r, c) {
-      var C = c.C, v = r.pick(['comp', 'comp', 'rev', 'cp', 'note']);
+      var C = c.C, v = r.pick(['cp', 'note']);
       if (v === 'comp') {
         var loan = r.range(0.2, 5, 0.1) * 1e6, rate = r.range(4, 12, 0.5) / 100, cp = r.pick([0.1, 0.15, 0.2]), normal = r.chance(0.5) ? 0 : h.r0(loan * cp * r.range(0.2, 0.8, 0.1) / 1000) * 1000;
         var x = FSM.calc.compBalance(loan, rate, cp, normal);
@@ -69,7 +69,7 @@
   });
 
   FSM.addConcepts({
-    id: 'fin_w4_book', topic: 'fin_w4', title: 'Book: bank loans, commercial paper, secured financing',
+    id: 'fin_w4_book', topic: 'fin_w4', title: 'Bank loans, commercial paper, secured financing',
     items: [
       { term: 'Unsecured short-term financing', cat: 'u', defs: ['Short-term funding obtained without pledging specific assets as collateral, e.g. payables, accruals, bank lines, commercial paper.'] },
       { term: 'Self-liquidating loan', cat: 'u', defs: ['A short-term loan repaid by the very assets it finances, e.g. seasonal inventory that is sold and collected.'] },
@@ -109,7 +109,6 @@
       { q: ['A loan has to be repaid in full and stay at zero for 30 days each year. What is this requirement?'], a: 'Annual cleanup' }
     ],
     tf: [
-      { s: 'The book\'s formula for the cost of giving up a discount is CD/(100% − CD) × 365/N; its “approximation” is CD × 365/N.', t: true, why: 'Watch out: the course formula sheet calls CD/(100% − CD) × 365/N the APPROXIMATE cost and adds a compounded EXACT version. Use the formula sheet.' },
       { s: 'Stretching accounts payable lowers the cost of giving up a discount, but may breach the agreement with the supplier.', t: true, why: 'It increases N, but raises an ethical and relationship issue.' },
       { s: 'Collateral reduces the risk that a borrower will default.', t: false, why: 'Collateral reduces the LOSS if default happens, not the probability of default.' },
       { s: 'Secured short-term loans usually carry lower rates than unsecured loans for the same borrower, but secured borrowers are often riskier and pay more overall.', t: true, why: 'Riskier firms must offer collateral and also pay higher rates and fees.' },

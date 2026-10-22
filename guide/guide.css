@@ -84,3 +84,6 @@ mark { background: var(--warn-soft); color: inherit; padding: 0 2px; }
 .sum-panel li { margin: 3px 0; }
 .sum-ex { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px dashed var(--line); }
 .sum-rem { margin-top: 12px; padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--accent, #5b3b78); background: var(--surface); }
+.sum-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin: 4px 0 6px; }
+.sum-exec { margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.sum-exec p { margin: 0 0 10px; }

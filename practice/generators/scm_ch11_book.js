@@ -2,7 +2,7 @@
 (function (root) {
   var FSM = root.FSM;
   FSM.addConcepts({
-    id: 'scm_ch11_book', topic: 'scm_ch11', title: 'Book: modal criteria, documents, claims & control',
+    id: 'scm_ch11_book', topic: 'scm_ch11', title: 'Modal criteria, documents, claims & control',
     items: [
       { term: 'Accessibility', cat: 'm', defs: ['Whether a mode can physically reach the origin and destination; truck is best, pipeline worst.'] },
       { term: 'Transit time', cat: 'm', defs: ['Total elapsed time from pickup to delivery (pickup, terminal handling, linehaul, delivery); air is fastest.'] },
@@ -38,7 +38,7 @@
       { q: ['Ryder provides trucks, drivers and managers that work only for one shipper.'], a: 'Dedicated contract carriage' }
     ],
     tf: [
-      { s: 'In the book\'s performance ranking, pipeline is best for reliability, security and cost but worst for accessibility and transit time.', t: true, why: 'Truck: best accessibility; air: best transit time.' },
+      { s: 'In the performance ranking of modes, pipeline is best for reliability, security and cost but worst for accessibility and transit time.', t: true, why: 'Truck: best accessibility; air: best transit time.' },
       { s: 'Motor carriage costs roughly 10× rail, and air more than twice motor carriage.', t: true, why: 'But speed can lower inventory cost and the total landed cost.' },
       { s: 'The freight bill acts as a receipt for the goods and as document of title.', t: false, why: 'That is the bill of lading; the freight bill is the invoice.' },
       { s: 'A carrier is liable for damage caused by the shipper\'s poor packaging.', t: false, why: '"Act of the shipper" is one of the five exemptions.' },

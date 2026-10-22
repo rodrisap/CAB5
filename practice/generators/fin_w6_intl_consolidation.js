@@ -282,8 +282,7 @@
       { s: 'In consolidation, the subsidiary\'s equity is added to the parent\'s equity.', t: false, why: 'It is eliminated against the parent\'s investment.' },
       { s: 'Simply adding up both balance sheets counts the subsidiary twice.', t: true, why: 'Once via its assets and liabilities, once via the investment.' },
       { s: 'Under a tax agreement, the foreign tax credit can make the home tax negative (a refund).', t: false, why: 'The credit can at most reduce the home tax to zero.' },
-      { s: 'Goodwill arises only after the excess of cost has been assigned to undervalued assets.', t: true, why: 'Step 2 allocates the excess; the remainder is goodwill.' },
-      { s: 'Consolidation is covered in depth in the textbook; the lecture only repeats it.', t: false, why: 'It is barely in the book — the lecture/video is the main source.' }
+      { s: 'Goodwill arises only after the excess of cost has been assigned to undervalued assets.', t: true, why: 'Step 2 allocates the excess; the remainder is goodwill.' }
     ]
   });
 })(typeof window !== 'undefined' ? window : globalThis);

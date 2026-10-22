@@ -2,7 +2,7 @@
 (function (root) {
   var FSM = root.FSM;
   FSM.addConcepts({
-    id: 'scm_ch5_book', topic: 'scm_ch5', title: 'Book: types of buys, supplier selection & quality programmes',
+    id: 'scm_ch5_book', topic: 'scm_ch5', title: 'Types of buys, supplier selection & quality programmes',
     items: [
       { term: 'Capital goods purchase', cat: 'b', defs: ['A long-term investment buy (e.g. equipment) that needs financial planning.'] },
       { term: 'Standard rebuy', cat: 'b', defs: ['A repeat purchase identical to earlier ones.'] },
@@ -20,7 +20,7 @@
     groups: {
       'Three types of buys': ['Capital goods purchase', 'Standard rebuy', 'Modified rebuy', 'MRO items'],
       'Quality programmes suppliers may hold': ['Total Quality Management (TQM)', 'Six Sigma', 'ISO 9000', 'Lean'],
-      'Supplier selection criteria (book)': ['Quality', 'Reliability', 'Risk', 'Capability', 'Financial', 'Desirable qualities', 'Sustainability']
+      'Supplier selection criteria': ['Quality', 'Reliability', 'Risk', 'Capability', 'Financial', 'Desirable qualities', 'Sustainability']
     },
     scenarios: [
       { q: ['A factory reorders exactly the same lubricant from the same supplier every month.'], a: 'Standard rebuy' },
@@ -30,9 +30,8 @@
       { q: ['The buyer sends a detailed request for prices, service levels and contract terms to three pre-qualified suppliers.'], a: 'Request for proposal (RFP)' }
     ],
     tf: [
-      { s: 'According to Langley, quality is usually the most important supplier selection factor.', t: true, why: 'Followed by reliability (on-time delivery) and others.' },
-      { s: 'Supplier evaluation should be informal and only happen when there are problems.', t: false, why: 'It should be regular and formal: were needs met, what can improve, did both sides\' investments pay off?' },
-      { s: 'Strategic sourcing software makes most sense for firms with large spend (the book mentions over $50m) in their top spend categories.', t: true, why: 'Smaller firms are better off with a hosted solution.' }
+      { s: 'Quality is usually the most important supplier selection factor.', t: true, why: 'Followed by reliability (on-time delivery) and others.' },
+      { s: 'Supplier evaluation should be informal and only happen when there are problems.', t: false, why: 'It should be regular and formal: were needs met, what can improve, did both sides\' investments pay off?' }
     ],
     sequences: [
       { title: 'Supplier portfolio screening (funnel)', steps: ['Initial supplier research and screening', 'Request for information (RFI)', 'Request for proposal (RFP)', 'Supplier selection', 'Supplier site visits'] }

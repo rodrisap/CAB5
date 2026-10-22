@@ -52,7 +52,9 @@
   var READ = {};
   function summaryHTML(id) {
     var S = (window.FSM_SUMMARIES || {})[id]; if (!S) return '';
-    var h = '<p class="sum-big">' + S.big + '</p>';
+    var h = '';
+    if (S.exec) h += '<div class="sum-exec"><div class="sum-label">Executive summary</div>' + S.exec.map(function (x) { return '<p>' + x + '</p>'; }).join('') + '</div><div class="sum-label">Double-check</div>';
+    h += '<p class="sum-big">In one line: ' + S.big + '</p>';
     S.parts.forEach(function (pt) { h += '<h4>' + pt.h + '</h4><ul>' + pt.li.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>'; });
     if (S.example) h += '<div class="sum-ex"><b>Example:</b> ' + S.example.q + '<ol>' + S.example.steps.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol></div>';
     if (S.remember) h += '<div class="sum-rem"><b>Remember for the exam</b><ul>' + S.remember.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
