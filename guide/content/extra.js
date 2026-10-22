@@ -1,0 +1,37 @@
+/* Study Guide — start, case, exam prep pages */
+(function (root) {
+  var G = root.FSM_GUIDE = root.FSM_GUIDE || { pages: [] };
+
+  G.pages.unshift({
+    id: 'start', group: 'Start', label: '', title: 'Start here', special: 'start',
+    html: '<p class="lead">This is the study guide for <b>FSM: Financial &amp; Supply Chain Management</b> (formerly CAB5). The exam is <b>70% Managerial Finance + 30% Supply Chain Management</b>, combined in one paper, and you get the formula sheet.</p>' +
+      '<div class="glance"><div class="box"><h3>How to use this guide</h3><ol><li>Open the week in the sidebar.</li><li>Read the <b>What to read</b> list in your own book (set it up once under <a href="#books">My books</a>).</li><li>Go through the notes and the worked examples.</li><li>Click <b>Practice this</b> and drill until every skill is <i>Mastered</i>.</li><li>Tick <b>Mark this week as done</b>.</li></ol></div>' +
+      '<div class="box"><h3>Schedule</h3><table><tr><th>Week</th><th>Finance</th><th>Read</th></tr><tr><td>1</td><td>Finance & markets</td><td>Ch. 1–2</td></tr><tr><td>2</td><td>Ratios</td><td>Ch. 3 (no DuPont)</td></tr><tr><td>3</td><td>Working capital</td><td>Ch. 15 (no 15.3)</td></tr><tr><td>4</td><td>Short-term funding</td><td>Ch. 16</td></tr><tr><td>5</td><td>Leverage & WACC</td><td>9.5, 12.1, 13.1</td></tr><tr><td>6</td><td>International & consolidation</td><td>19.1–19.3 + video</td></tr><tr><td>7</td><td>Exam prep</td><td>—</td></tr></table><p class="small muted">SCM: Langley Ch. 1, 2, 3, 5, 9, 11.</p></div></div>' +
+      '<div class="callout info"><b>Why the practice app works differently this time</b>Every question is generated fresh: new numbers, company, wording, layout and question type (calculation, multiple choice, spot the error, put the steps in order, matching, true/false with reasons). “Mastered” needs 85%+ in at least three formats, with fresh numbers, and it comes back after 1, 3 and 7 days. You can\'t pass by recognising questions — only by understanding them.</div>'
+  });
+
+  G.pages.push({
+    id: 'case', group: 'Finance', label: 'Case', title: 'Course case: NoordzeeOutdoor B.V.', practice: 'fin_case',
+    glance: ['Week 2: ratios vs industry (current, inventory turnover, D/E, ROE, EPS, P/E)', 'Week 3: working capital change and CCC', 'Week 4: five funding options — cost and EAR', 'Week 5: DOL, DFL, DTL and WACC', 'Week 6: acquisition of VeloTrans — consolidated balance sheet'],
+    goals: ['Solve every seminar case question', 'State your assumptions (averages, COGS incl. fixed, common equity excl. preferred)'],
+    readings: [],
+    sections: [
+      { h: 'Assumptions the solutions use', html: '<ul><li>Total COGS from the appendix = variable COGS + fixed operating costs (6,860,000 and 7,740,000).</li><li>Averages use the opening balances on 1 January 2025 from the appendix.</li><li>EACS = net profit − €60,000 preferred dividends. Common equity = total equity − €500,000 preferred capital.</li><li>Credit sales exclude cash sales (20% / 10%). Purchases = COGS + change in inventory, and credit purchases exclude cash purchases (20% / 35%).</li><li>WACC uses book weights of long-term loans, preferred capital and common equity. r_d = interest on long-term loans ÷ long-term loans: 78,000 / 1,200,000 = 6.50% (2025) and (78,000 + 43,200) / 1,800,000 = 6.73% (2026).</li></ul>' },
+      { h: 'Answers to check yourself (original case)', html: '<table><tr><th></th><th>2025</th><th>2026</th></tr><tr><td>Current ratio</td><td>2.31</td><td>2.21</td></tr><tr><td>Inventory turnover</td><td>4.67×</td><td>4.25×</td></tr><tr><td>Debt-to-equity</td><td>0.99</td><td>1.20</td></tr><tr><td>ROE</td><td>47.5%</td><td>51.4%</td></tr><tr><td>EPS</td><td>€2.40</td><td>€3.00</td></tr><tr><td>P/E</td><td>3.54</td><td>3.40</td></tr><tr><td>AAI / ACP / APP</td><td>78.2 / 58.7 / 50.8</td><td>85.8 / 40.6 / 53.4</td></tr><tr><td>CCC</td><td>86.0 days</td><td>72.9 days</td></tr><tr><td>DOL / DFL / DTL</td><td>2.32 / 1.16 / 2.69</td><td>2.15 / 1.17 / 2.52</td></tr><tr><td>WACC</td><td>8.73%</td><td>9.08%</td></tr></table>' +
+        '<p><b>Funding (EAR):</b> Harborview 6/94 = 6.38% for 150 days → 16.25% · Crestline 1.60% for 65 days → 9.34% · Nordbank (1.008)^12 − 1 = 10.03% · FuelMaster 3.4/96.6 = 3.52%, N = 100 → 13.46% · RoutePro N = 20 → 88.0%.</p>' +
+        '<p><b>VeloTrans:</b> equity 825,000 − 220,000 − 250,000 = 355,000 → excess 900,000 − 355,000 = <b>545,000 goodwill</b>. Consolidated total assets 7,990,000 (CL 1,920,000; NCL 2,650,000 incl. the new 600,000 loan; equity 3,420,000). If equipment is worth 400,000 more: PPE +400,000, goodwill <b>145,000</b>.</p><div class="callout"><b>Variants</b>In the practice app, 65% of case questions use changed numbers and names, so you can\'t reuse these answers there.</div>' }
+    ]
+  });
+
+  G.pages.push({
+    id: 'exam', group: 'Finance', label: 'Week 7', title: 'Exam preparation', practice: null, special: 'exam',
+    glance: ['Time plan', 'Which formula-sheet line fits which question', 'The trap list', 'Exam simulation'],
+    goals: ['Finish a full exam simulation at 70%+ before the real exam', 'Know every trap on the list below'],
+    readings: [],
+    sections: [
+      { h: 'Time plan', html: '<p>Points roughly follow the 70/30 split. Spend about 70% of your time on finance calculations. Do the SCM concept questions first if they are quick for you — they bank points fast. Write every formula with its numbers filled in; the formula sheet tells you the structure, and you supply the right inputs.</p>' },
+      { h: 'Question type → formula-sheet line', html: '<table><tr><th>If the question asks…</th><th>Use</th></tr><tr><td>How long cash is tied up</td><td>CCC = AAI + ACP − APP</td></tr><tr><td>How much money operations need</td><td>Resources needed to support CCC</td></tr><tr><td>Should we relax/tighten credit or add a discount?</td><td>Course method: ΔCM − Δcosts − ΔA/R × RRR (not on the sheet!)</td></tr><tr><td>Pay the supplier early?</td><td>Cost of giving up discount (approx. or exact)</td></tr><tr><td>Which loan is cheapest?</td><td>r_p for each, then EAR</td></tr><tr><td>How sensitive is EBIT / EPS?</td><td>DOL, DFL, DTL</td></tr><tr><td>Minimum return for projects</td><td>WACC</td></tr><tr><td>Consolidated balance sheet</td><td>Eliminate investment vs equity; excess → uplift → goodwill (not on the sheet!)</td></tr></table>' },
+      { h: 'Trap list', html: '<ol><li>Borrowing is financing cash flow, not operating.</li><li>Dealer trade cost = ½ spread × shares + commission.</li><li>EPS/ROE/ROA/net margin use EACS (minus preferred dividends).</li><li>ROE, D/E and book value use common equity (minus preferred stock).</li><li>Inventory turnover: COGS ÷ <i>average</i> inventory.</li><li>ACP uses credit sales only; APP uses credit purchases (= COGS + Δinventory).</li><li>CCC subtracts APP; it can be negative.</li><li>Credit policy: don\'t forget the cost of ΔA/R; value A/R at sales net of discount; 365 days.</li><li>Discount cost: N = full period − discount period; divide by (100% − CD).</li><li>Discount loan: r_p = X/(100 − X).</li><li>DFL: subtract PD/(1 − T), not PD.</li><li>DTL = DOL × DFL (multiply).</li><li>WACC: only debt gets (1 − T).</li><li>FX: divide by “X per €” to get euros.</li><li>Tax credit can\'t push home tax below zero.</li><li>Consolidation: compare the price with sub EQUITY; consolidated equity = parent only; uplift first, then goodwill.</li></ol>' }
+    ]
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
