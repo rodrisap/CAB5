@@ -23,8 +23,10 @@
   byId.books = { id: 'books', group: 'Start', title: 'My books', special: 'books' };
   byId.formulas = { id: 'formulas', group: 'Start', title: 'Formula sheet', special: 'formulas' };
   byId.glossary = { id: 'glossary', group: 'Start', title: 'Glossary', special: 'glossary' };
+  byId.notes = { id: 'notes', group: 'Start', title: 'My notes', special: 'notes' };
+  var NT = window.FSMNotes;
   var NAV = [
-    { g: 'Start', ids: ['start', 'books', 'formulas', 'glossary'] },
+    { g: 'Start', ids: ['start', 'notes', 'books', 'formulas', 'glossary'] },
     { g: 'Managerial Finance · 70%', ids: ['fin_w1', 'fin_w2', 'fin_w3', 'fin_w4', 'fin_w5', 'fin_w6', 'case', 'exam'] },
     { g: 'Supply Chain Management · 30%', ids: ['scm_ch1', 'scm_ch2', 'scm_ch3', 'scm_ch5', 'scm_ch9', 'scm_ch11'] }
   ];
@@ -34,11 +36,12 @@
   function renderSidebar(cur) {
     var n = STUDY.filter(function (id) { return done['page:' + id]; }).length;
     var h = '<div class="prog small muted">' + n + ' / ' + STUDY.length + ' sections done</div><div class="prog bar"><i style="width:' + Math.round(100 * n / STUDY.length) + '%"></i></div>';
+    var cnt = {}; NT.all().forEach(function (x) { cnt[x.page] = (cnt[x.page] || 0) + 1; });
     NAV.forEach(function (sec) {
       h += '<h4>' + sec.g + '</h4>';
       sec.ids.forEach(function (id) {
         var p = byId[id]; if (!p) return;
-        h += '<a href="#' + id + '" class="' + (id === cur ? 'active' : '') + '"><span><span class="wk">' + esc(p.label || '') + '</span> ' + esc(p.title) + '</span>' + (done['page:' + id] ? '<span class="done">✓</span>' : '') + '</a>';
+        h += '<a href="#' + id + '" class="' + (id === cur ? 'active' : '') + '"><span><span class="wk">' + esc(p.label || '') + '</span> ' + esc(p.title) + '</span>' + '<span>' + (id === 'notes' ? (NT.all().length ? '<span class="ncount">' + NT.all().length + '</span>' : '') : (cnt[id] ? '<span class="ncount" title="Your notes">✎' + cnt[id] + '</span>' : '')) + (done['page:' + id] ? '<span class="done">✓</span>' : '') + '</span></a>';
       });
     });
     side.innerHTML = h;
@@ -103,11 +106,12 @@
   function showReader(src, title, pg, rid) {
     var ov = document.createElement('div');
     ov.className = 'reader-ov';
-    ov.innerHTML = '<div class="reader-head"><div><b>' + esc(title) + '</b>' + (pg ? '<span class="small muted"> · read pages ' + pg.from + '–' + pg.to + '</span>' : '') + '</div><div class="acts">' + (summaryHTML(rid) ? '<button type="button" class="ghost" id="rdSum">Summary</button>' : '') + '<a class="btn ghost" target="_blank" rel="noopener" href="' + src + '">Open full screen</a><button type="button" class="ghost" id="rdDone">Mark as read</button><button type="button" id="rdClose">Close</button></div></div><div class="reader-body"><iframe title="Book" src="' + src + '"></iframe>' + (summaryHTML(rid) ? '<aside class="reader-sum" hidden><div class="sum-panel">' + summaryHTML(rid) + '</div></aside>' : '') + '</div>';
+    ov.innerHTML = '<div class="reader-head"><div><b>' + esc(title) + '</b>' + (pg ? '<span class="small muted"> · read pages ' + pg.from + '–' + pg.to + '</span>' : '') + '</div><div class="acts">' + (summaryHTML(rid) ? '<button type="button" class="ghost" id="rdSum">Summary</button>' : '') + '<a class="btn ghost" target="_blank" rel="noopener" href="' + src + '">Open full screen</a><button type="button" class="ghost" id="rdNote">✎ Note</button><button type="button" class="ghost" id="rdDone">Mark as read</button><button type="button" id="rdClose">Close</button></div></div><div class="reader-body"><iframe title="Book" src="' + src + '"></iframe>' + (summaryHTML(rid) ? '<aside class="reader-sum" hidden><div class="sum-panel">' + summaryHTML(rid) + '</div></aside>' : '') + '</div>';
     document.body.appendChild(ov);
     document.body.style.overflow = 'hidden';
     function close() { ov.remove(); document.body.style.overflow = ''; }
     ov.querySelector('#rdClose').onclick = close;
+    ov.querySelector('#rdNote').onclick = function () { NT.open(); };
     var rs = ov.querySelector('#rdSum');
     if (rs) rs.onclick = function () { var a = ov.querySelector('.reader-sum'); a.hidden = !a.hidden; rs.textContent = a.hidden ? 'Summary' : 'Hide summary'; };
     ov.querySelector('#rdDone').onclick = function () { done['read:' + rid] = true; store('fsm.guide.done', done); close(); route(); };
@@ -128,11 +132,13 @@
     if (p.examples && p.examples.length) h += '<h2>Worked examples</h2><p class="small muted">Try each one yourself first, then open the solution.</p>' + p.examples.map(function (e) { return '<details class="example"><summary>' + esc(e.title) + '</summary><div class="body"><p>' + esc(e.q) + '</p><ol>' + e.steps.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol></div></details>'; }).join('');
     if (p.practice) h += '<div class="practice-cta"><div><b>Practice this</b><div class="small">Drill until every skill shows “Mastered”.</div></div><a class="btn" href="' + practiceLink(p.practice) + '">Open practice for ' + esc(p.label || p.title) + ' →</a></div>';
     if (p.special === 'exam') h += '<div class="practice-cta"><div><b>Exam simulation</b><div class="small">Timed, mixed, formula sheet available, feedback only at the end.</div></div><a class="btn" href="../practice/index.html#exam">Start exam simulation →</a></div>';
+    if (p.id !== 'start') { var mn = NT.forPage(p.id).length; h += '<div class="notes-cta"><div><b>✎ Your notes for this page</b><div class="small muted">' + (mn ? mn + ' note' + (mn === 1 ? '' : 's') + ' so far.' : 'Write the 2–3 things you want to remember, in your own words.') + '</div></div><button type="button" class="ghost" id="pgNote">' + (mn ? 'Open notes' : 'Write a note') + '</button></div>'; }
     if (p.id !== 'start') h += '<label class="check markdone"><input type="checkbox" id="pageDone"' + (done['page:' + p.id] ? ' checked' : '') + '> <b>Mark this section as done</b></label>';
     var i = ORDER.indexOf(p.id), prev = ORDER[i - 1], next = ORDER[i + 1];
     h += '<div class="pagenav">' + (prev ? '<a class="btn ghost" href="#' + prev + '">← ' + esc(byId[prev].title) + '</a>' : '<span></span>') + (next ? '<a class="btn ghost" href="#' + next + '">' + esc(byId[next].title) + ' →</a>' : '') + '</div>';
     pageEl.innerHTML = h;
     wireReadings(pageEl);
+    var pn = document.getElementById('pgNote'); if (pn) pn.onclick = function () { NT.open(); };
     var pd = document.getElementById('pageDone');
     if (pd) pd.onchange = function () { done['page:' + p.id] = pd.checked; store('fsm.guide.done', done); renderSidebar(p.id); };
   }
@@ -194,6 +200,75 @@
     document.getElementById('gfilter').oninput = function (e) { draw(e.target.value); };
   }
 
+  /* ---------- my notes page ---------- */
+  var noteFilter = { q: '', star: false };
+  function noteGroups() {
+    var titles = {}, order = ['general'].concat(ORDER, ['practice', 'case-exam']);
+    var groups = {};
+    NT.all().forEach(function (n) { (groups[n.page] = groups[n.page] || []).push(n); titles[n.page] = byId[n.page] ? (byId[n.page].label ? byId[n.page].label + ' · ' : '') + byId[n.page].title : n.title; });
+    Object.keys(groups).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
+    return order.filter(function (k) { return groups[k]; }).map(function (k) { return { id: k, title: titles[k], notes: groups[k].sort(function (a, b) { return a.t - b.t; }) }; });
+  }
+  function notesMarkdown() {
+    var out = '# My FSM notes\n\nExported ' + new Date().toLocaleString() + '\n';
+    noteGroups().forEach(function (g) {
+      out += '\n## ' + g.title + '\n';
+      g.notes.forEach(function (n) { out += '\n' + (n.star ? '★ ' : '') + (n.quote ? '> ' + n.quote + '\n\n' : '') + n.text + '\n'; });
+    });
+    return out;
+  }
+  function download(name, text, type) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function renderNotes() {
+    var total = NT.all().length, stars = NT.all().filter(function (n) { return n.star; }).length;
+    pageEl.innerHTML = '<div class="crumb">Start</div><h1>My notes</h1>' +
+      '<p class="muted">Everything you wrote down, grouped by topic. Add notes on any page with the <b>✎ Notes</b> button (bottom right), or select text on a page and tap <b>＋ Add to notes</b>. Notes you write here go under “General”.</p>' +
+      '<div class="notes-tools"><input type="search" id="nfilter" placeholder="Search your notes…" value="' + esc(noteFilter.q) + '"><label class="check"><input type="checkbox" id="nstar"' + (noteFilter.star ? ' checked' : '') + '> ★ Only important (' + stars + ')</label></div>' +
+      '<div class="btnrow notes-btns"><button type="button" id="nAdd">＋ New general note</button><button type="button" class="ghost" id="nMd"' + (total ? '' : ' disabled') + '>Download as text (.md)</button><button type="button" class="ghost" id="nPrint"' + (total ? '' : ' disabled') + '>Print</button><button type="button" class="ghost" id="nBak"' + (total ? '' : ' disabled') + '>Download backup</button><label class="btn ghost">Restore backup<input type="file" accept=".json,application/json" id="nRes" hidden></label></div>' +
+      '<div id="nlist"></div>' +
+      '<div class="callout info"><b>Your notes stay in this browser</b>They are saved on this device only (nothing is uploaded, and clearing your browser data deletes them). To use them on your phone or laptop too, tap <i>Download backup</i> here and <i>Restore backup</i> on the other device. Do a backup before the exam week.</div>';
+    function draw() {
+      var q = noteFilter.q.toLowerCase(), h = '';
+      noteGroups().forEach(function (g) {
+        var ns = g.notes.filter(function (n) { return (!noteFilter.star || n.star) && (!q || (n.text + ' ' + n.quote + ' ' + g.title).toLowerCase().indexOf(q) >= 0); });
+        if (!ns.length) return;
+        var link = byId[g.id] ? '#' + g.id : g.id === 'practice' ? '../practice/index.html' : g.id === 'case-exam' ? '../practice/case.html' : '';
+        h += '<h2>' + (link ? '<a href="' + link + '">' + esc(g.title) + '</a>' : esc(g.title)) + ' <span class="small muted">(' + ns.length + ')</span></h2>' + ns.map(function (n) { return NT.noteHTML(n, false); }).join('');
+      });
+      var L = document.getElementById('nlist');
+      L.innerHTML = h || (total ? '<p class="muted">No notes match.</p>' : '<div class="card"><b>No notes yet.</b><p class="small muted" style="margin:6px 0 0">Open a week, read a section, then press <b>✎ Notes</b> and write the key point in your own words — the formula, when you use it, and the trap.</p></div>');
+      NT.wireNotes(L);
+    }
+    draw();
+    document.getElementById('nfilter').oninput = function (e) { noteFilter.q = e.target.value; draw(); };
+    document.getElementById('nstar').onchange = function (e) { noteFilter.star = e.target.checked; draw(); };
+    document.getElementById('nAdd').onclick = function () { NT.open(); };
+    document.getElementById('nMd').onclick = function () { download('fsm-notes.md', notesMarkdown(), 'text/markdown'); };
+    document.getElementById('nPrint').onclick = function () {
+      var w = window.open('', '_blank'); if (!w) return;
+      w.document.write('<!doctype html><meta charset="utf-8"><title>My FSM notes</title><style>body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:30px auto;padding:0 16px;color:#111}h2{border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:26px}.n{margin:10px 0;padding:6px 10px;border-left:3px solid #ccc}.n.s{border-color:#c90}.q{color:#555;font-style:italic}ul{margin:2px 0}</style><h1>My FSM notes</h1>' +
+        noteGroups().map(function (g) { return '<h2>' + esc(g.title) + '</h2>' + g.notes.map(function (n) { return '<div class="n' + (n.star ? ' s' : '') + '">' + (n.quote ? '<div class="q">“' + esc(n.quote) + '”</div>' : '') + (n.star ? '★ ' : '') + NT.fmt(n.text) + '</div>'; }).join(''); }).join(''));
+      w.document.close(); w.focus(); w.print();
+    };
+    document.getElementById('nBak').onclick = function () { download('fsm-notes-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(NT.all(), null, 1), 'application/json'); };
+    document.getElementById('nRes').onchange = function (e) {
+      var f = e.target.files[0]; if (!f) return;
+      f.text().then(function (txt) {
+        var inc = JSON.parse(txt); if (!Array.isArray(inc)) throw new Error('bad');
+        var cur = NT.all(), have = {}; cur.forEach(function (n) { have[n.id] = 1; });
+        var added = 0; inc.forEach(function (n) { if (n && n.id && typeof n.text === 'string' && !have[n.id]) { cur.push(n); added++; } });
+        NT.replaceAll(cur); alert(added + ' note' + (added === 1 ? '' : 's') + ' restored.');
+      }).catch(function () { alert('That file is not a notes backup.'); });
+    };
+  }
+  NT.onChange(function () {
+    var hsh = decodeURIComponent(location.hash.replace(/^#/, '')) || 'start';
+    if (hsh === 'notes') { var f = document.activeElement && document.activeElement.id === 'nfilter'; renderNotes(); if (f) { var el = document.getElementById('nfilter'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+    renderSidebar(byId[hsh] ? hsh : '');
+  });
+
   /* ---------- search ---------- */
   function strip(html) { return String(html || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' '); }
   var INDEX = ORDER.filter(function (id) { return byId[id] && !byId[id].special || id === 'exam' || id === 'start'; }).map(function (id) {
@@ -214,8 +289,10 @@
     }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score; });
     var gl = glossaryItems().filter(function (x) { return words.every(function (w) { return (x.term + ' ' + x.def).toLowerCase().indexOf(w) >= 0; }); }).slice(0, 8);
     function hl(s) { var out = esc(s); words.forEach(function (w) { if (w.length > 1) out = out.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); }); return out; }
+    var mine = NT.all().filter(function (n) { return words.every(function (w) { return (n.text + ' ' + n.quote).toLowerCase().indexOf(w) >= 0; }); }).slice(0, 10);
     var h = '<h1>Search: “' + esc(q) + '”</h1>';
     h += res.length ? '<ul class="results">' + res.map(function (x) { return '<li><a href="#' + x.e.id + '"><b>' + esc((x.e.label ? x.e.label + ' · ' : '') + x.e.title) + '</b></a><div class="snip">…' + hl(x.snip) + '…</div></li>'; }).join('') + '</ul>' : '<p class="muted">No pages match.</p>';
+    if (mine.length) h += '<h2>Your notes</h2>' + mine.map(function (n) { return '<div class="nt-note' + (n.star ? ' star' : '') + '"><div class="small muted"><a href="#' + (byId[n.page] ? n.page : 'notes') + '">' + esc(n.title) + '</a></div>' + (n.quote ? '<div class="nt-q">“' + hl(n.quote) + '”</div>' : '') + '<div class="nt-body">' + hl(n.text) + '</div></div>'; }).join('');
     if (gl.length) h += '<h2>Glossary</h2><dl class="gloss">' + gl.map(function (x) { return '<dt>' + hl(x.term) + '</dt><dd>' + hl(x.def) + ' <small>· <a href="#' + x.page + '">' + esc(x.where) + '</a></small></dd>'; }).join('') + '</dl>';
     pageEl.innerHTML = h;
   }
@@ -226,14 +303,16 @@
   function route() {
     closeMenu();
     var hsh = decodeURIComponent(location.hash.replace(/^#/, '')) || 'start';
-    if (hsh.indexOf('search=') === 0) { renderSidebar(''); renderSearch(hsh.slice(7)); return; }
+    if (hsh.indexOf('search=') === 0) { renderSidebar(''); NT.setPage('general', 'General notes'); renderSearch(hsh.slice(7)); return; }
     if (!byId[hsh]) hsh = 'start';
     renderSidebar(hsh);
     var p = byId[hsh];
     if (p.special === 'books') renderBooks();
     else if (p.special === 'formulas') renderFormulas();
     else if (p.special === 'glossary') renderGlossary();
+    else if (p.special === 'notes') renderNotes();
     else renderStudyPage(p);
+    if (p.special === 'notes' || p.special === 'books') NT.setPage('general', 'General notes'); else NT.setPage(p.id, (p.label ? p.label + ' · ' : '') + p.title);
     document.title = p.title + ' · FSM Study Guide';
   }
   window.addEventListener('hashchange', function () { route(); window.scrollTo(0, 0); });
