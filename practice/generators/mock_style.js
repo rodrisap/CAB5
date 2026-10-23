@@ -71,6 +71,7 @@
         { n: 'a bill from ' + r.pick(['AlloyCraft Suppliers', 'FuelMaster Suppliers', 'PolyChem Trading', 'SteelStructures Ltd.']) + ' with terms ' + cd + '/' + y + ', n/' + z, rp: cd / (100 - cd), days: z - y, how: cd + ' / (100 − ' + cd + ')' }
       ];
       o.forEach(function (x) { x.eur = amt * x.rp; x.ear = Math.pow(1 + x.rp, 365 / x.days) - 1; });
+      o[2].eurAlt = o[2].eur; o[2].eur = amt * cd / 100; o[1].earAlt = Y / 100;
       var i = r.int(0, 2), cheapest = o.reduce(function (b, x, k) { return x.eur < o[b].eur ? k : b; }, 0), lowestEar = o.reduce(function (b, x, k) { return x.ear < o[b].ear ? k : b; }, 0);
       var lab = ['Option 1 (discount loan)', 'Option 2 (regular loan)', 'Option 3 (supplier bill)'];
       var recurring = r.chance(0.4);
@@ -80,10 +81,10 @@
         intro: [c.company + ' needs short-term financing and is evaluating three options, each of which raises ' + C(amt) + ' (365-day year):<br>1) ' + o[0].n + '.<br>2) ' + o[1].n + '.<br>3) ' + o[2].n + '.'],
         facts: [], layouts: ['sentence'],
         parts: [
-          { ask: ['What is the total interest expense of option ' + (i + 1) + ' in euros?'], answer: o[i].eur, unit: 'cur', dp: 0,
-            traps: i === 0 ? [{ v: amt * X / 100, why: 'A discount loan raises the money you RECEIVE; its rate per period is X/(100 − X).' }] : i === 1 ? [{ v: amt * Y / 100, why: 'Simple interest p.a. must be scaled to ' + d2 + ' days.' }] : [{ v: amt * cd / 100, why: 'Giving up the discount costs CD on (100 − CD): r_p = CD/(100 − CD).' }],
-            steps: [step('r_p = ' + o[i].how, o[i].rp, 'pct', 'period rate', 3), step('Interest = ' + C(amt) + ' × r_p', o[i].eur, 'cur', 'amount raised × r_p')] },
-          { ask: ['What is the effective annual rate (exact, with compounding) of option ' + (i + 1) + '?'], answer: o[i].ear, unit: 'pct', dp: 2,
+          { ask: ['What is the total interest expense of option ' + (i + 1) + ' in euros?'], answer: o[i].eur, alts: o[i].eurAlt ? [o[i].eurAlt] : [], unit: 'cur', dp: 0,
+            traps: i === 0 ? [{ v: amt * X / 100, why: 'Interest is deducted up front, so you must borrow MORE than ' + C(amt) + ': ' + C(amt) + ' ÷ ' + F.num(1 - X / 100, 2) + '. Interest = amount × X/(100 − X).' }] : i === 1 ? [{ v: amt * Y / 100, why: 'Simple interest p.a. must be scaled to ' + d2 + ' days.' }] : [],
+            steps: i === 2 ? [step('Cost = ' + cd + '% × ' + C(amt) + ' (discount you give up)', o[2].eur, 'cur', 'course case method')] : i === 0 ? [step('Amount to borrow = ' + C(amt) + ' ÷ (1 − ' + X + '%)', amt / (1 - X / 100), 'cur', 'gross-up', 2), step('Interest = borrowed − ' + C(amt), o[0].eur, 'cur', '= amount × X/(100 − X)')] : [step('Interest = ' + C(amt) + ' × ' + Y + '% × ' + d2 + '/365', o[1].eur, 'cur', 'simple interest')] },
+          { ask: ['What is the effective annual rate (exact, with compounding) of option ' + (i + 1) + '?'], answer: o[i].ear, alts: o[i].earAlt ? [o[i].earAlt] : [], unit: 'pct', dp: 2,
             traps: [{ v: o[i].rp * 365 / o[i].days, why: 'That is the approximate (no compounding) value; the question asks for the exact EAR.' }],
             steps: [step('Days = ' + o[i].days + (i === 2 ? ' (N = ' + z + ' − ' + y + ')' : ''), o[i].days, 'days', 'period length'), step('EAR = (1 + ' + h.p(o[i].rp, 3) + ')^(365/' + o[i].days + ') − 1', o[i].ear, 'pct', 'formula sheet', 2)],
             method: ['Find the period rate r_p for the option', 'Find the number of days of the period', 'Raise (1 + r_p) to the power 365/days', 'Subtract 1'] },

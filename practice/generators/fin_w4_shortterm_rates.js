@@ -109,6 +109,7 @@
     id: 'fin_w4_loans', topic: 'fin_w4', title: 'Period rate and EAR of different loans',
     formula: 'EAR = (1 + r_p)^(365/days) − 1',
     build: function (r, c) {
+      var altsL = [];
       var type = r.pick(['simple', 'discount', 'period', 'compound']);
       var amt = r.range(50, 2000, 50) * 1000;
       var bank = r.pick(BANKS);
@@ -119,7 +120,8 @@
         rp = FSM.calc.simpleLoan(rate, days); ear = FSM.calc.ear(rp, days);
         desc = bank + ' offers a regular loan of ' + C(amt) + ' at ' + rate + '% p.a. simple interest for ' + days + ' days (interest paid at maturity).';
         steps = [step('r_p = ' + rate + '% × ' + days + '/365', rp, 'pct', 'p.a. rate scaled to the period', 4), step('EAR = (1 + ' + h.p(rp, 4) + ')^(365/' + days + ') − 1', ear, 'pct', 'formula sheet', 2)];
-        traps.push({ v: rate / 100, why: 'The quoted p.a. rate is a simple rate; compounding within the year makes the EAR higher.' }, { v: rate / 100 * days / 360, why: 'Use 365 days.' });
+        traps.push({ v: rate / 100 * days / 360, why: 'Use 365 days.' }); altsL = [rate / 100];
+        steps.push(step('(The official NoordzeeOutdoor solution simply uses the stated ' + rate + '% p.a. as the EAR of a simple-interest loan; that answer is accepted too.)', rate / 100, 'pct', 'alternative', 2));
       } else if (type === 'discount') {
         rate = r.range(3, 12, 0.5); days = r.pick([60, 90, 120, 150, 180, 365]);
         rp = FSM.calc.discountLoan(rate); ear = FSM.calc.ear(rp, days);
@@ -142,7 +144,7 @@
       }
       var parts = [];
       if (type !== 'compound' && r.chance(0.6)) parts.push({ ask: ['What is the interest cost for the loan period (as a %)?', 'What is the rate you effectively pay for the period (r_p)?', 'Total interest expense of this option, as a % for the period?'], answer: rp, unit: 'pct', dp: 2, traps: traps.slice(0, 1), steps: steps.slice(0, steps.length - 1) });
-      parts.push({ ask: ['What is the effective annual rate (EAR)?', 'Calculate the exact effective annual rate.', 'Convert this loan to an effective annual rate.'], answer: ear, unit: 'pct', dp: 2, traps: traps, steps: steps,
+      parts.push({ ask: ['What is the effective annual rate (EAR)?', 'Calculate the exact effective annual rate.', 'Convert this loan to an effective annual rate.'], answer: ear, alts: altsL, unit: 'pct', dp: 2, traps: traps, steps: steps,
         method: ['Find the interest rate for the actual loan period', 'Count how many such periods fit in a year', 'Compound: (1 + r_p)^n − 1'] });
       return { intro: [c.company + ' needs short-term funding.', 'For a seasonal cash shortage, ' + c.company + ' looks at a loan.'], facts: [fact('Offer', amt, 'cur', desc)], noise: [fact('x', 0, 'cur', 'The CFO notes that the company\'s tax rate is ' + r.int(15, 30) + '%.')], parts: parts, layouts: ['sentence', 'case'] };
     }
@@ -175,7 +177,7 @@
         parts.push({ ask: ['a) Total interest expense (as a %) of option ' + (i + 1) + '?', 'a) What does option ' + (i + 1) + ' cost for its own period (in %)?'], answer: o.rp, unit: 'pct', dp: 2,
           traps: i === 0 ? [{ v: o1.rate / 100, why: 'Discount loan: rate/(100 − rate).' }] : i === 1 ? [{ v: o2.rate / 100, why: 'Scale the p.a. rate to the loan period.' }] : [{ v: (i === 2 ? t3 : t4).cd / 100, why: 'Use CD/(100 − CD).' }],
           steps: [step('Option ' + (i + 1) + ': r_p = ' + o.how, o.rp, 'pct', 'see terms', 4)] });
-        parts.push({ ask: ['b) Effective annual rate of option ' + (i + 1) + '?', 'b) Annualise option ' + (i + 1) + ' (exact EAR).'], answer: o.ear, unit: 'pct', dp: 2,
+        parts.push({ ask: ['b) Effective annual rate of option ' + (i + 1) + '?', 'b) Annualise option ' + (i + 1) + ' (exact EAR).'], answer: o.ear, alts: i === 1 ? [o2.rate / 100] : [], unit: 'pct', dp: 2,
           traps: [{ v: o.rp * 365 / o.days, why: 'That is the approximate annual rate without compounding (fine for ranking, but the question asks for the exact EAR).' }],
           steps: [step('r_p', o.rp, 'pct', 'part a', 4), step('EAR = (1 + r_p)^(365/' + o.days + ') − 1', o.ear, 'pct', 'formula sheet', 2)] });
       });

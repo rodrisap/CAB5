@@ -193,20 +193,30 @@
     build: function (r, c) {
       c.setCur('EUR');
       var cs = getCase(r), d = cs.d;
-      var fs = d.funding.map(function (f) { var x = fundCalc(f); x.name = f.name; return x; });
+      var C = c.C;
+      var fs = d.funding.map(function (f) { var x = fundCalc(f); x.name = f.name; x.kind = f.kind;
+        var A = 1000000;
+        if (f.kind === 'discount') { x.eur = A * f.rate / (100 - f.rate); x.eurHow = 'borrow ' + C(A) + ' ÷ ' + F.num(1 - f.rate / 100, 2) + ' = ' + C(A / (1 - f.rate / 100), 2) + '; interest = ' + C(A * f.rate / (100 - f.rate), 2); x.cover = f.days; }
+        else if (f.kind === 'simple') { x.eur = A * f.rate / 100 * f.days / 365; x.eurHow = C(A) + ' × ' + f.rate + '% × ' + f.days + '/365'; x.cover = f.days; x.earAlt = f.rate / 100; }
+        else if (f.kind === 'monthly') { var mm = f.rate / 100 / 12; x.eur = A * (Math.pow(1 + mm, 3) - 1); x.eurHow = 'for 3 months: ' + C(A) + ' × ((1 + ' + F.num(f.rate, 1) + '%/12)^3 − 1)'; x.cover = 365; }
+        else { x.eur = A * f.cd / 100; x.eurAlt = A * f.cd / (100 - f.cd); x.eurHow = f.cd + '% × invoice ' + C(A); x.cover = f.z - f.y; }
+        return x; });
       var picks = r.sample([0, 1, 2, 3, 4], 2);
       var best = fs.reduce(function (b, f, i) { return f.ear < fs[b].ear ? i : b; }, 0);
       var parts = [];
       picks.forEach(function (k) {
         var f = fs[k];
         if (d.funding[k].kind !== 'monthly') parts.push({ ask: ['Cost of the ' + f.name + ' option for its own period (in %)?', 'What does the ' + f.name + ' option cost for its period?'], answer: f.rp, unit: 'pct', dp: 2, traps: [{ v: (d.funding[k].rate || d.funding[k].cd) / 100, why: d.funding[k].kind === 'simple' ? 'Scale the p.a. rate to the number of days.' : 'Use rate/(100 − rate).' }], steps: [step('r_p = ' + f.how, f.rp, 'pct', 'terms', 4)] });
-        parts.push({ ask: ['Exact effective annual rate of the ' + f.name + ' option?', 'EAR of ' + f.name + '?'], answer: f.ear, unit: 'pct', dp: 2, traps: [{ v: f.rp * 365 / f.days, why: 'That is the approximate rate without compounding.' }], steps: d.funding[k].kind === 'monthly' ? [step('EAR = ' + f.how, f.ear, 'pct', 'compounding 12×', 2)] : [step('r_p = ' + f.how, f.rp, 'pct', 'terms', 4), step('EAR = (1 + r_p)^(365/' + f.days + ') − 1', f.ear, 'pct', 'formula sheet', 2)] });
+        parts.push({ ask: [d.funding[k].kind === 'monthly' ? 'What does the ' + f.name + ' option cost in euros if the money is needed for 3 months?' : 'What is the cost in euros of the ' + f.name + ' option (for its own period)?'], answer: f.eur, alts: f.eurAlt ? [f.eurAlt] : [], unit: 'cur', dp: 2, steps: [step(f.eurHow, f.eur, 'cur', 'course case solution', 2)] });
+        parts.push({ ask: ['Exact effective annual rate of the ' + f.name + ' option?', 'EAR of ' + f.name + '?'], answer: f.ear, alts: f.earAlt ? [f.earAlt] : [], unit: 'pct', dp: 2, traps: [{ v: f.rp * 365 / f.days, why: 'That is the approximate rate without compounding.' }], steps: d.funding[k].kind === 'monthly' ? [step('EAR = ' + f.how, f.ear, 'pct', 'compounding 12×', 2)] : [step('r_p = ' + f.how, f.rp, 'pct', 'terms', 4), step('EAR = (1 + r_p)^(365/' + f.days + ') − 1', f.ear, 'pct', 'formula sheet', 2)] });
       });
       var names = fs.map(function (f) { return f.name; });
       parts.push({ kind: 'choice', ask: ['Which option has the lowest effective annual rate?'], choices: [names[best]].concat(names.filter(function (_, i) { return i !== best; }).slice(0, 3)), correctChoice: 0, why: fs.map(function (f) { return f.name + ': ' + h.p(f.ear); }).join('<br>') });
-      parts.push({ kind: 'open', ask: ['The company needs the money for about 3 months. Which option would you advise, and why?'],
-        model: 'Compare the options on the same basis (EAR) and check whether the period fits 3 months. Lowest EAR: ' + names[best] + ' (' + h.p(fs[best].ear) + '). Supplier options only give money for N days (' + fs[3].days + ' and ' + fs[4].days + ' days); the 12-month facility gives money longer than needed; loans with periods close to 90 days match best. Avoid very expensive options such as forgoing a discount with a short N (' + names[4] + ' ≈ ' + h.p(fs[4].ear) + ').',
-        points: ['Uses EAR to compare (not the quoted rates)', 'Checks whether each option\'s period matches the 3-month need', 'Names the cheapest suitable option', 'Notes that skipping a discount with a short N is very expensive'] });
+      var ok = fs.map(function (f, i) { return i; }).filter(function (i) { return fs[i].cover >= 90; });
+      var adv = ok.reduce(function (b, i) { return b === -1 || fs[i].eur < fs[b].eur ? i : b; }, -1);
+      parts.push({ kind: 'open', ask: ['The company needs the money for 3 months. Which option would you advise, and why?'],
+        model: 'Step 1 — drop the options that do not give the money for 3 months (90 days): ' + fs.filter(function (f) { return f.cover < 90; }).map(function (f) { return f.name + ' (' + f.cover + ' days)'; }).join(', ') + '. Step 2 — of the rest, compare the cost in euros: ' + ok.map(function (i) { return fs[i].name + ' ' + C(fs[i].eur) + (fs[i].kind === 'monthly' ? ' for 3 months' : ''); }).join(', ') + '. Advice: <b>' + fs[adv].name + '</b>' + (fs[adv].kind === 'monthly' ? ' — it is also flexible, because it can easily be extended.' : '.') + ' (This is how the official case solution reasons: with a 3-month need the 65-day loan and the 20-day supplier credit drop out, and the monthly-compounded facility is cheapest.)',
+        points: ['Removes options whose period is shorter than 3 months', 'Compares the remaining options on cost for the period', 'Names ' + fs[adv].name, 'Mentions flexibility / cost per period, not only EAR'] });
       return { intro: [header(cs) + cs.name + ' needs €1,000,000 of short-term funds. Five options (365-day year):'],
         facts: fs.map(function (f) { return fact(f.name, 0, 'cur', '• ' + f.name + ': ' + f.txt + '.<br>'); }), layouts: ['sentence'], parts: parts };
     }

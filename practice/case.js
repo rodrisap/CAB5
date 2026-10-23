@@ -86,7 +86,7 @@
     }
     h += '<textarea class="notes" placeholder="' + (p.open && !p.fields ? 'Your answer…' : 'Show your calculation / explanation…') + '"' + (sub ? ' disabled' : '') + '>' + esc(cur.notes[p.id] || '') + '</textarea>';
     if (sub) {
-      h += '<details class="model" open><summary>Model answer' + (p.fields ? ' & calculation' : '') + '</summary>' + p.model + '</details>';
+      h += '<details class="model" open><summary>Model answer' + (p.fields ? ' & calculation' : '') + '</summary>' + p.model + (p.extra || '') + '</details>';
       if (p.check) {
         var ticks = cur.self[p.id] || [];
         h += '<div class="selfgrade"><b>Mark your written answer:</b> tick what you covered' + (p.need ? ' (full marks at ' + p.need + ')' : '') + '<div class="checks">' + p.check.map(function (c, k) { return '<label><input type="checkbox" data-k="' + k + '"' + (ticks[k] ? ' checked' : '') + '> ' + esc(c) + '</label>'; }).join('') + '</div></div>';
@@ -100,6 +100,7 @@
   function gradeField(f, val) {
     if (val === '' || val === undefined) return false;
     var g = F.grade(val, f.ans, f.unit === 'x' || f.unit === 'days' ? 'num' : f.unit, { tolRel: 0.01, tolAbs: f.tolAbs !== undefined ? f.tolAbs : (f.unit === 'cur' ? 1 : f.unit === 'pct' ? 0.0005 : 0.01) });
+    if (!g.ok && f.alts) f.alts.forEach(function (a) { if (!g.ok) g = F.grade(val, a, f.unit === 'x' || f.unit === 'days' ? 'num' : f.unit, { tolRel: 0.01, tolAbs: f.tolAbs !== undefined ? f.tolAbs : (f.unit === 'cur' ? 1 : f.unit === 'pct' ? 0.0005 : 0.01) }); });
     return !!g.ok;
   }
   function partScore(p, cur) {

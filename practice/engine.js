@@ -212,7 +212,7 @@
     var parts = b.parts.map(function (p, i) {
       var q = {
         prompt: Array.isArray(p.ask) ? r.pick(p.ask) : p.ask,
-        unit: p.unit, dp: p.dp, answer: p.answer, traps: p.traps || [],
+        unit: p.unit, dp: p.dp, answer: p.answer, alts: p.alts || [], traps: p.traps || [],
         steps: p.steps || [], hint: p.hint, kind: p.kind, model: p.model, points: p.points,
         choices: p.choices, correctChoice: p.correctChoice, why: p.why, method: p.method
       };
@@ -400,6 +400,7 @@
     switch (part.format) {
       case 'num': {
         var g = F.grade(response, part.answer, part.unit, { dp: part.dp, tolRel: part.tolRel });
+        if (!g.ok && part.alts && part.alts.length) part.alts.forEach(function (a) { if (!g.ok) { var ga = F.grade(response, a, part.unit, { dp: part.dp, tolRel: part.tolRel }); if (ga.ok) g = ga; } });
         var trap = null;
         if (!g.ok && isFinite(g.parsed)) {
           (part.traps || []).forEach(function (t) {

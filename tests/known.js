@@ -144,3 +144,11 @@
     near(C.dividendTax(650000, 350000, 0.30, false).payable + 350000, 545000, 1e-9, 'Mock2 tax a'); near(C.dividendTax(650000, 350000, 0.30, true).payable + 350000, 350000, 1e-9, 'Mock2 tax b');
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+(function (root) { var K = root.FSM.known;
+  K.officialCaseSolution = function (near) {
+    near(1e6 * 6 / 94, 63829.79, 1e-6, 'Harborview cost'); near(1e6 * 0.09 * 65 / 365, 16027.40, 1e-6, 'Crestline cost');
+    near(1e6 * (Math.pow(1.008, 3) - 1), 24192.51, 1e-6, 'Nordbank 3 months'); near(1e6 * (Math.pow(1.008, 12) - 1), 100338.69, 1e-6, 'Nordbank 12 months (slide says 100,339.69 — a typo)');
+    near(Math.pow(1 + 3.4 / 96.6, 365 / 100) - 1, 0.1346, 0.001, 'FuelMaster EAR'); near(Math.pow(1 + 3.4 / 96.6, 365 / 20) - 1, 0.88, 0.001, 'RoutePro EAR');
+    near(0.28 * 0.065 * 0.75 + 0.12 * 0.09 + 0.6 * 0.105, 0.0874, 0.001, 'WACC 2025 rounded weights'); near(0.34 * 0.0673 * 0.75 + 0.1 * 0.095 + 0.56 * 0.115, 0.0911, 0.001, 'WACC 2026 rounded weights');
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
