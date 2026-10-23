@@ -81,6 +81,67 @@
     var fm = {}; at.forEach(function (a) { if (a.score === 1) a.f.forEach(function (f) { fm[f] = 1; }); });
     return Math.round(avg * 100) + '% of last ' + last.length + ' · ' + Object.keys(fm).length + '/3 formats correct';
   }
+  /* ---------- "when will I master it?" ---------- */
+  function checks(at, skill) {
+    var last = at.slice(-12);
+    var avg = last.length ? last.reduce(function (s, a) { return s + a.score; }, 0) / last.length : 0;
+    var fm = {}; at.forEach(function (a) { if (a.score === 1) a.f.forEach(function (f) { fm[f] = 1; }); });
+    var fresh = {}; at.forEach(function (a) { if (a.score === 1 && (skill.kind === 'concept' || a.f.indexOf('num') >= 0)) fresh[a.seed] = 1; });
+    var last2 = at.length >= 2 && at.slice(-2).every(function (a) { return a.score === 1 && !a.hint; });
+    return { n: at.length, avg: avg, nLast: last.length, formats: Object.keys(fm), fresh: Object.keys(fresh).length, last2: last2,
+      ok: at.length >= 4 && avg >= 0.85 && Object.keys(fm).length >= 3 && Object.keys(fresh).length >= 2 && last2 };
+  }
+  // Minimum number of further correct answers (no hints, new numbers, rotating formats) until the skill counts as mastered.
+  function toGo(id) {
+    var skill = FSM.skills[id], at = attemptsOf(id).slice();
+    if (checks(at, skill).ok) return 0;
+    var all = FSM.formatsFor(id).filter(function (f, i, a) { return a.indexOf(f) === i; });
+    for (var k = 1; k <= 40; k++) {
+      var c = checks(at, skill);
+      var missing = all.filter(function (x) { return c.formats.indexOf(x) < 0; });
+      var pickF = skill.kind !== 'concept' && c.fresh < 2 && all.indexOf('num') >= 0 ? 'num' : (missing[0] || all[0]);
+      at.push({ score: 1, f: [pickF], seed: -k, hint: false });
+      if (checks(at, skill).ok) return k;
+    }
+    return 40;
+  }
+  function minutesPer(id) {
+    var d = attemptsOf(id).map(function (a) { return a.dur; }).filter(function (x) { return x > 5000 && x < 900000; }).sort(function (a, b) { return a - b; });
+    if (d.length >= 3) return d[Math.floor(d.length / 2)] / 60000;
+    return FSM.skills[id].kind === 'concept' ? 0.75 : 2.5;
+  }
+  function planFor(ids) {
+    var n = 0, min = 0, left = 0;
+    ids.forEach(function (id) { var st = status(id).k; var g = st === 'due' ? 1 : toGo(id); if (g) { left++; n += g; min += g * minutesPer(id); } });
+    return { answers: n, minutes: min, skillsLeft: left };
+  }
+  function dur(m) { m = Math.max(1, Math.round(m)); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }
+  function pace() { // answers per day over the last 14 days
+    var since = Date.now() - 14 * DAY, n = 0;
+    Object.keys(S.attempts).forEach(function (id) { S.attempts[id].forEach(function (a) { if (a.t >= since) n++; }); });
+    return { perDay: n / 14, n: n };
+  }
+  var FMT_NAMES = { num: 'number', mcq: 'multiple choice', choice: 'choose', tf: 'true/false', error: 'spot the error', open: 'written', match: 'match', order: 'order' };
+  function checklistHTML(id) {
+    var skill = FSM.skills[id], c = checks(attemptsOf(id), skill);
+    function item(ok, txt) { return '<li class="' + (ok ? 'ok' : '') + '">' + (ok ? '✓' : '○') + ' ' + txt + '</li>'; }
+    return '<ul class="mlist">' +
+      item(c.nLast >= 4 && c.avg >= 0.85, '85%+ over your last 12 tries <span class="muted">(now ' + Math.round(c.avg * 100) + '% of ' + c.nLast + ')</span>') +
+      item(c.formats.length >= 3, 'right in 3 different question types <span class="muted">(' + Math.min(3, c.formats.length) + '/3' + (c.formats.length ? ': ' + c.formats.map(function (f) { return FMT_NAMES[f] || f; }).join(', ') : '') + ')</span>') +
+      item(c.fresh >= 2, (skill.kind === 'concept' ? 'right on 2 different versions' : 'right on 2 calculations with new numbers') + ' <span class="muted">(' + Math.min(c.fresh, 2) + '/2)</span>') +
+      item(c.last2, 'your last 2 answers right without hints or “show solution”') + '</ul>';
+  }
+  function goLine(id) {
+    var st = status(id).k, sr = S.sr[id];
+    if (st === 'mastered') {
+      if (sr && sr.next) { var d = Math.max(1, Math.ceil((sr.next - Date.now()) / DAY)); return 'Mastered · next re-check in ' + d + ' day' + (d === 1 ? '' : 's') + ' (' + (sr.stage - 1) + ' of 3 re-checks passed)'; }
+      return 'Mastered · locked in (all 3 re-checks passed)';
+    }
+    if (st === 'due') return 'Re-check due now: answer it right once to keep it mastered';
+    var g = toGo(id);
+    return 'At least ' + g + ' more correct answer' + (g === 1 ? '' : 's') + ' to master (≈ ' + dur(g * minutesPer(id)) + ')';
+  }
+
   function topicProgress(tid) {
     var sk = FSM.skillsFor(tid);
     var m = sk.filter(function (s) { var k = status(s.id).k; return k === 'mastered'; }).length;
@@ -129,6 +190,7 @@
     var h = '<div class="hero"><div><h1>Financial &amp; Supply Chain Management</h1><p class="muted">Every question is generated fresh: new numbers, wording, layout and question type. Memorising won\'t work — understanding will.</p></div>' +
       '<div class="countdown">' + (cd !== null ? '<b>' + (cd >= 0 ? cd : 0) + '</b><span class="muted">days to exam</span>' : '<a href="#settings">Set exam date</a>') + '</div></div>';
     if (S.last && FSM.skills[S.last.skill]) h += '<div class="btnrow"><a class="btn" href="#' + (S.last.mode === 'learn' ? 'learn=' + S.last.topic : 'drill=' + S.last.skill) + '">Continue: ' + esc(FSM.skills[S.last.skill].title) + '</a>' + (Object.keys(S.mistakes).length ? '<a class="btn ghost" href="#review">Review ' + Object.keys(S.mistakes).length + ' weak skills</a>' : '') + '</div>';
+    h += planCard(Object.keys(FSM.skills), 'everything');
     h += '<a class="card topic-card" href="case.html" style="border-color:var(--accent)"><span class="tag fin">Exam format</span><h3>Case exam: mock 1, mock 2 and new cases</h3><div class="small muted">One company case, 9 questions, 2 hours, pass at 55. Practise here once your skills are mastered.</div></a>';
     if (due.length) h += '<div class="card"><b>Spaced repetition:</b> ' + due.length + ' mastered skill(s) are due for a re-check. <a href="#drill=' + due[0] + '">Start</a></div>';
     ['Finance', 'Supply Chain'].forEach(function (area) {
@@ -137,12 +199,31 @@
         var p = topicProgress(t.id);
         h += '<a class="card topic-card" href="#topic=' + t.id + '"><span class="tag ' + (area === 'Finance' ? 'fin' : 'scm') + '">' + (t.week ? 'Week ' + t.week : t.label || '') + '</span>' +
           '<h3>' + esc(t.title) + '</h3><div class="small muted">' + esc(t.read || '') + '</div>' +
-          '<div class="bar"><i style="width:' + (p.total ? Math.round(100 * p.done / p.total) : 0) + '%"></i></div><div class="small muted">' + p.done + ' / ' + p.total + ' skills mastered</div></a>';
+          '<div class="bar"><i style="width:' + (p.total ? Math.round(100 * p.done / p.total) : 0) + '%"></i></div><div class="small muted">' + p.done + ' / ' + p.total + ' skills mastered' + (p.done < p.total ? ' · ' + planFor(FSM.skillsFor(t.id).map(function (s) { return s.id; })).answers + ' correct answers to go' : ' ✓') + '</div></a>';
       });
       h += '</div>';
     });
     h += '<div class="card"><h3>Exam simulation</h3><p class="muted">Timed, mixed paper (70% finance / 30% SCM), formula sheet available, no feedback until you submit.</p><a class="btn" href="#exam">Start an exam</a></div>';
     view.innerHTML = h;
+  }
+
+  function planCard(ids, what) {
+    var p = planFor(ids), done = ids.length - p.skillsLeft;
+    if (!p.skillsLeft) return '<div class="card plan done"><b>✓ You have mastered ' + what + '.</b> <span class="muted">Keep doing the re-checks so it stays that way.</span></div>';
+    var pc = pace(), h = '<div class="card plan"><div class="plan-top"><div><div class="small muted">To master ' + what + '</div><div class="plan-big">' + p.answers + ' more correct answers</div><div class="small muted">(the minimum, if you get them right; every wrong answer adds a few)</div><div class="small muted">≈ ' + dur(p.minutes) + ' of practice · ' + done + ' / ' + ids.length + ' skills mastered</div></div>';
+    if (pc.n >= 10 && pc.perDay > 0) {
+      var days = Math.ceil(p.answers / (0.75 * pc.perDay)); // not every answer is correct
+      var when = new Date(Date.now() + days * DAY), exd0 = S.settings.examDate ? new Date(S.settings.examDate + 'T09:00') : null;
+      var late = exd0 && when > exd0;
+      h += '<div class="plan-when"><div class="small muted">At your pace (' + Math.round(pc.perDay * 7) + ' answers/week) you\'ll get there around</div><b' + (late ? ' style="color:var(--bad)"' : '') + '>' + (days > 365 ? 'more than a year from now' : when.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: when.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })) + '</b>' + (late ? '<div class="small" style="color:var(--bad)">That\'s after your exam: speed up (see below).</div>' : exd0 ? '<div class="small" style="color:var(--good)">Before your exam ✓</div>' : '') + '</div>';
+    } else h += '<div class="plan-when small muted">Answer a few more questions and I\'ll estimate the date you\'ll get there.</div>';
+    h += '</div>';
+    var exd = S.settings.examDate ? new Date(S.settings.examDate + 'T09:00') : null;
+    if (exd) {
+      var dl = Math.ceil((exd - Date.now()) / DAY), left = Math.max(1, dl - 1);
+      h += '<div class="small" style="margin-top:6px">' + (dl > 0 ? 'Exam in ' + dl + ' day' + (dl === 1 ? '' : 's') : 'Exam date has passed') + ' → about <b>' + dur(p.minutes / left) + ' a day</b> (' + Math.ceil(p.answers / left) + ' correct answers) to finish in time, keeping the last day for the mock exams.</div>';
+    } else h += '<div class="small muted" style="margin-top:6px"><a href="#settings">Set your exam date</a> to see how much you need per day.</div>';
+    return h + '</div>';
   }
 
   /* ---------------- topic ---------------- */
@@ -151,10 +232,10 @@
     if (!t) return showHome();
     var sk = FSM.skillsFor(tid);
     var h = '<p class="small"><a href="#home">← All topics</a></p><h1>' + esc(t.title) + '</h1><p class="muted">' + esc(t.read || '') + '</p>' +
-      '<div class="btnrow"><a class="btn" href="#learn=' + tid + '">Learn this topic (mixed)</a><a class="btn ghost" href="../guide/index.html#' + (t.guide || tid) + '">Read the notes</a></div><div class="card">';
+      planCard(sk.map(function (s) { return s.id; }), 'this topic') + '<div class="btnrow"><a class="btn" href="#learn=' + tid + '">Learn this topic (mixed)</a><a class="btn ghost" href="../guide/index.html#' + (t.guide || tid) + '">Read the notes</a></div><div class="card">';
     sk.forEach(function (s) {
       var st = status(s.id);
-      h += '<div class="skill-row"><div><b>' + esc(s.title) + '</b><div class="small muted">' + (attemptsOf(s.id).length ? masteryDetail(s.id) : (s.kind === 'concept' ? 'Concept questions' : 'Calculation')) + '</div></div>' +
+      h += '<div class="skill-row"><div><b>' + esc(s.title) + '</b><div class="small muted">' + (attemptsOf(s.id).length ? masteryDetail(s.id) : (s.kind === 'concept' ? 'Concept questions' : 'Calculation')) + '</div><div class="small togo ' + st.k + '">' + esc(goLine(s.id)) + '</div>' + (attemptsOf(s.id).length && st.k !== 'mastered' ? '<details class="small"><summary>What still counts?</summary>' + checklistHTML(s.id) + '</details>' : '') + '</div>' +
         '<div style="display:flex;gap:8px;align-items:center"><span class="status ' + st.k + '">' + st.label + '</span><a class="btn ghost" href="#drill=' + s.id + '">Drill</a></div></div>';
     });
     h += '</div><p class="small muted">Mastered = ≥85% over your last 12 tries, correct in at least 3 different question formats, fresh numbers, and your last 2 answers right without hints. Mastered skills come back after 1, 3 and 7 days.</p>';
@@ -190,7 +271,7 @@
     if (session.mode === 'review' && lastF.indexOf(fmt) >= 0) fmt = nextFormat(id, 0.99);
     var sd = seed || newSeed();
     var q = FSM.make(id, sd, { format: seed ? undefined : fmt });
-    session.q = q; session.hinted = false; session.checked = false;
+    session.q = q; session.hinted = false; session.checked = false; session.shownAt = Date.now();
     S.last = { mode: session.mode === 'learn' ? 'learn' : 'drill', topic: q.topic, skill: id }; save();
     renderQuestion(q, { practice: true });
   }
@@ -349,12 +430,21 @@
     });
     var score = total ? got / total : 1;
     session.count++; if (score === 1) session.correct++;
-    if (!hasOpen) record(q.skill, { t: Date.now(), score: giveUp ? 0 : score, f: q.formats, seed: q.seed, hint: session.hinted || giveUp });
+    if (!hasOpen) { record(q.skill, { t: Date.now(), score: giveUp ? 0 : score, f: q.formats, seed: q.seed, hint: session.hinted || giveUp, dur: Date.now() - session.shownAt }); showMasteryNote(q.skill); }
     else session.pending = { q: q, got: got, total: total, giveUp: giveUp };
     document.getElementById('checkBtn').style.display = 'none';
     document.getElementById('skipBtn').style.display = 'none';
     document.getElementById('hintBtn').style.display = 'none';
     document.getElementById('nextBtn').style.display = '';
+  }
+
+  function showMasteryNote(id) {
+    var old = document.getElementById('masteryNote'); if (old) old.remove();
+    var nb = document.getElementById('nextBtn'); if (!nb) return;
+    var st = status(id).k;
+    var div = document.createElement('div'); div.id = 'masteryNote'; div.className = 'mnote ' + st;
+    div.innerHTML = '<b>' + esc(FSM.skills[id].title) + ':</b> ' + esc(goLine(id)) + (st === 'mastered' ? ' 🎉' : '') + '<details><summary class="small">What still counts?</summary>' + checklistHTML(id) + '</details>';
+    var host = nb.parentNode; host.parentNode.insertBefore(div, host.nextSibling);
   }
 
   function markOptions(p, i, r) {
@@ -381,7 +471,7 @@
       var pend = session.pending;
       if (pend) {
         var tot = pend.total + 0.5, got = pend.got + 0.5 * selfScore;
-        record(q.skill, { t: Date.now(), score: pend.giveUp ? 0 : Math.round(got / tot * 100) / 100, f: q.formats, seed: q.seed, hint: session.hinted || pend.giveUp });
+        record(q.skill, { t: Date.now(), score: pend.giveUp ? 0 : Math.round(got / tot * 100) / 100, f: q.formats, seed: q.seed, hint: session.hinted || pend.giveUp, dur: Date.now() - session.shownAt }); showMasteryNote(q.skill);
         session.pending = null;
       }
       this.disabled = true; this.textContent = 'Saved (' + c + '/' + n + ')';

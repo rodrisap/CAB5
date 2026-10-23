@@ -84,3 +84,20 @@
 .versionbox button { min-height: 36px; padding: 5px 10px; }
 .checklist label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; }
 .empty { text-align: center; padding: 30px 10px; color: var(--muted); }
+
+.plan { border-color: var(--accent); }
+.plan.done { border-color: var(--good); }
+.plan-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.plan-big { font-size: 1.5rem; font-weight: 700; line-height: 1.2; margin: 2px 0; }
+.plan-when { text-align: right; max-width: 260px; }
+.plan-when b { font-size: 1.15rem; }
+.togo { margin-top: 2px; color: var(--accent); }
+.togo.mastered { color: var(--good); }
+.togo.due { color: var(--warn); }
+.mlist { list-style: none; padding: 0; margin: 6px 0 2px; }
+.mlist li { margin: 2px 0; }
+.mlist li.ok { color: var(--good); }
+.mnote { margin: 12px 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); }
+.mnote.mastered { background: var(--good-soft); }
+.mnote details { margin-top: 4px; }
+@media (max-width: 600px) { .plan-when { text-align: left; max-width: none; } }
