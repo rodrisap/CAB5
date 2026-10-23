@@ -9,7 +9,7 @@ function load(f) { vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), 
 
 var html = fs.readFileSync(path.join(ROOT, 'practice/index.html'), 'utf8');
 var scripts = [];
-html.replace(/<script src="([^"]+)"/g, function (_, s) { scripts.push(path.normalize(path.join('practice', s))); });
+html.replace(/<script src="([^"]+)"/g, function (_, s) { scripts.push(path.normalize(path.join('practice', s.split('?')[0]))); });
 scripts.filter(function (s) { return !/app\.js$/.test(s); }).forEach(function (f) {
   if (fs.existsSync(path.join(ROOT, f))) load(f); else console.log('  (missing, skipped: ' + f + ')');
 });

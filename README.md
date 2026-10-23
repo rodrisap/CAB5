@@ -31,3 +31,7 @@ Fuzzes every question generator (200 versions each) and checks known answers fro
 - Progress is saved in your browser (export/import in Practice → Settings).
 - Your textbook PDFs are stored only in your own browser and are never uploaded.
 - No textbook text is included in this repo; all notes are written in our own words.
+
+## Deploying updates
+Script and stylesheet tags carry a `?v=` version so browsers fetch fresh files after each push. Bump it with:
+`V=$(date +%Y%m%d%H%M); sed -i -E "s#(src|href)=\"((\.\./)?[A-Za-z0-9_./-]+\.(js|css))(\?v=[0-9]+)?\"#\1=\"\2?v=$V\"#g" guide/index.html practice/index.html practice/case.html index.html`
