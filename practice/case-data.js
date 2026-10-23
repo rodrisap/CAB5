@@ -2,7 +2,7 @@
    Every case is a data object; buildExam(d) turns it into 9 questions with course-method solutions. */
 (function (root) {
   var FSM = root.FSM, F = FSM.fmt;
-  var E = function (v, dp) { return '€' + F.num(v, dp || 0); };          // euros
+  var E = function (v, dp) { return (v < 0 ? '−€' : '€') + F.num(Math.abs(v), dp || 0); };          // euros
   var Em = function (v) { return '€' + F.num(v, 1) + 'm'; };               // millions
   var P = function (x, dp) { return F.num(x * 100, dp === undefined ? 2 : dp) + '%'; };
   var N = function (v, dp) { return F.num(v, dp || 0); };
@@ -60,8 +60,21 @@
   function buildExam(d) {
     var x = derive(d), Q = [], v = d.variants;
     var nm = d.short;
+    var VX = FSM.caseVariants || {};
+    var L = d.lead.L, vv = d.lead.v;
+    function impact(ch, label) {
+      var L2 = r1(L * ch.f), v2 = ch.v2, tot0 = L + vv, tot1 = L2 + v2, short = ch.f < 1;
+      return {
+        model: '<ul><li><b>(a) Cycle stock ' + (short ? '↓' : '↑') + '</b>: cycle stock follows the lead time (' + L + ' → ' + F.num(L2, 1) + ' days).</li>' +
+          '<li><b>(b) Safety stock ' + (v2 < vv ? '↓' : '↑') + '</b>: safety stock covers uncertainty; variability goes from ±' + vv + ' to ±' + F.num(v2, 1) + ' days' + (v2 > vv ? ' (less reliable → bigger buffer)' : ' (more reliable → smaller buffer)') + '.</li>' +
+          '<li><b>(c) Order costs ' + (short ? '↑' : '↓') + '</b>: ' + (short ? 'to keep the lower cycle stock, ' + nm + ' orders smaller quantities more often.' : 'fewer, larger orders.') + '</li>' +
+          '<li><b>(d) Transportation costs ' + (short ? '↑' : '↓') + '</b>: ' + (short ? 'smaller, more frequent shipments lose consolidation (fewer full loads).' : 'larger shipments can be consolidated.') + '</li>' +
+          '<li><b>(e) ROA ' + (tot1 < tot0 ? '↑' : '↓') + '</b>: total stock goes from ' + tot0 + ' to ' + F.num(tot1, 1) + ' days, so inventory (assets) ' + (tot1 < tot0 ? 'falls and ROA rises' : 'rises and ROA falls') + ' — as long as the higher order/transport costs do not eat up the gain.</li></ul>',
+        check: ['(a) cycle stock direction + reason', '(b) safety stock direction + reason', '(c) order costs direction + reason', '(d) transport costs direction + reason', '(e) ROA direction + reason'] };
+    }
 
     /* ---- Q1 ---- */
+    if (v.q1 && v.q1.v && VX.q1 && VX.q1[v.q1.v]) Q.push(VX.q1[v.q1.v](d, x, v.q1)); else {
     if (v.q1.v === 'legal') {
       var p = v.q1.profit, corp = p * d.T, div = p - corp, wht = div * v.q1.wht, tot = corp + wht;
       Q.push({ n: 1, area: 'fin', title: 'Legal forms', intro: nm + ' is structured as a ' + d.form + ', the ' + d.formNote + ' variant of incorporation.', parts: [
@@ -84,7 +97,9 @@
       ] });
     }
 
+    }
     /* ---- Q2 CCC ---- */
+    if (v.q2 && v.q2.v && VX.q2 && VX.q2[v.q2.v]) Q.push(VX.q2[v.q2.v](d, x, v.q2)); else {
     var ai = avg(x.inv), aar = avg(x.ar), aap = avg(x.ap), cogsM = d.cogs / 1e6, salesM = d.is.sales / 1e6, cpM = d.creditPurch / 1e6;
     var turn = cogsM / ai, aai = 365 / turn, acp = aar / (salesM / 365), app = aap / (cpM / 365), ccc = aai + acp - app, res = ai + aar - aap;
     Q.push({ n: 2, area: 'fin', title: 'Cash conversion cycle', parts: [
@@ -99,7 +114,9 @@
         model: steps(['Resources = average inventory + average receivables − average payables', '= ' + F.num(ai, 2) + ' + ' + F.num(aar, 2) + ' − ' + F.num(aap, 2) + ' = <b>' + Em(res) + '</b>', 'Same result with the formula sheet: AAI/365 × COGS + ACP/365 × credit sales − APP/365 × credit purchases.']) }
     ] });
 
+    }
     /* ---- Q3 ---- */
+    if (v.q3 && v.q3.v && VX.q3 && VX.q3[v.q3.v]) Q.push(VX.q3[v.q3.v](d, x, v.q3)); else {
     if (v.q3.v === 'credit') {
       var c = v.q3, dCM = (c.s1 - c.s0) * c.cmr, ar0 = c.s0 * c.acp0 / 365, ar1 = c.s1 * c.acp1 / 365, dAR = ar1 - ar0, cost = dAR * c.rrr, bd0 = c.s0 * c.b0, bd1 = c.s1 * c.b1, dBD = bd1 - bd0, net = dCM - cost - dBD;
       Q.push({ n: 3, area: 'fin', title: 'Credit terms', intro: nm + ' is considering relaxing its credit policy for its ' + c.segment + ' clients. Management has provided the following information:<ul><li>Annual credit sales for this client segment are currently ' + E(c.s0) + ' and are expected to increase to ' + E(c.s1) + '.</li><li>The contribution margin ratio for this segment is ' + P(c.cmr, 0) + '.</li><li>The average collection period is expected to increase from ' + c.acp0 + ' to ' + c.acp1 + ' days.</li><li>The bad debt rate is currently ' + P(c.b0, 1) + ' of credit sales and is expected to rise to ' + P(c.b1, 1) + ' under the new policy.</li><li>' + nm + ' requires a ' + P(c.rrr, 0) + ' return on invested capital for new sales.</li></ul>', parts: [
@@ -129,7 +146,9 @@
       ] });
     }
 
+    }
     /* ---- Q4 leverage ---- */
+    if (v.q4 && v.q4.v && VX.q4 && VX.q4[v.q4.v]) Q.push(VX.q4[v.q4.v](d, x, v.q4)); else {
     var dol = x.CM / x.EBIT, pdPre = x.PD / (1 - d.T), dfl = x.EBIT / (x.EBT - pdPre), dtl = dol * dfl;
     Q.push({ n: 4, area: 'fin', title: 'Leverage', parts: [
       { id: '4a', pts: v.q4pts[0], prompt: 'Calculate ' + nm + '\'s degree of operating leverage (DOL) for ' + d.year + '.', fields: [f('DOL', dol, 'x', 3, 0.01)], model: steps(['DOL = CM ÷ EBIT = ' + E(x.CM) + ' ÷ ' + E(x.EBIT) + ' = <b>' + F.num(dol, 3) + '</b>']) },
@@ -141,7 +160,9 @@
         check: v.q4c === 'eps' ? ['States EPS changes by DTL × 1% (≈ ' + F.num(dtl, 2) + '%)'] : ['Compares DOL with DFL and names the bigger one', 'Gives an implication for management'], need: v.q4c === 'eps' ? 1 : 2 }
     ] });
 
+    }
     /* ---- Q5 ---- */
+    if (v.q5 && v.q5.v && VX.q5 && VX.q5[v.q5.v]) Q.push(VX.q5[v.q5.v](d, x, v.q5)); else {
     if (v.q5.v === 'wacc') {
       var D = x.ltd[0], Pf = x.pref[0], S = r1(x.common[0] + x.re[0]), T5 = D + Pf + S, rd = d.is.interest / 1e6 / D;
       var wd = D / T5, wp = Pf / T5, ws = S / T5, wacc = wd * rd * (1 - d.T) + wp * d.rp + ws * d.rs;
@@ -162,7 +183,9 @@
       ] });
     }
 
+    }
     /* ---- Q6 consolidation ---- */
+    if (v.q6 && v.q6.v && VX.q6 && VX.q6[v.q6.v]) Q.push(VX.q6[v.q6.v](d, x, v.q6)); else {
     var c6 = v.q6, tg = c6.target, lines = ['Cash & cash equivalents', 'Accounts receivable', 'Inventory', '?', 'PPE (net)', 'Intangible assets', 'Total assets', 'Accounts payable & current liabilities', 'Short-term borrowings', 'Long-term debt', 'Total liabilities', 'Equity', 'Total liabilities & equity'];
     var excess = r1(c6.price - tg.eq), gw = r1(excess - c6.uplift);
     var pre = null, fin;
@@ -196,18 +219,9 @@
       model: steps(['Excess of cost over book value = ' + Em(excess) + (c6.v === 'templates' ? ' (price ' + Em(c6.price) + ' − ' + tg.name + ' equity ' + Em(tg.eq) + ')' : ''), 'First raise non-current assets to market value: PPE ' + F.num(pt[4], 1) + ' + ' + F.num(c6.uplift, 1) + ' = ' + F.num(fin[4], 1), 'The rest is <b>goodwill</b>: ' + F.num(excess, 1) + ' − ' + F.num(c6.uplift, 1) + ' = <b>' + Em(gw) + '</b> (this replaces the "?" line)', 'Total assets stay ' + Em(fin[6]) + '; liabilities and equity do not change.']) + tableHTML(fin, 'Goodwill') });
     Q.push({ n: 6, area: 'fin', title: 'Consolidation', intro: nm + ' has agreed to acquire ' + tg.name + (c6.v === 'templates' ? ' for ' + E(c6.price * 1e6) + '. ' + nm + ' will finance ' + P(c6.cashPct, 0) + ' of the purchase price in cash, with the remaining ' + P(1 - c6.cashPct, 0) + ' borrowed from the bank (long-term). The balance sheet of ' + tg.name + ' at 31 December ' + d.year + ' (€ millions): cash ' + F.num(tg.cash, 1) + ', accounts receivable ' + F.num(tg.ar, 1) + ', inventory ' + F.num(tg.inv, 1) + ', non-current assets (PPE) ' + F.num(tg.nca, 1) + '; current liabilities ' + F.num(tg.cl, 1) + ', long-term debt ' + F.num(tg.ltd, 1) + ', equity ' + F.num(tg.eq, 1) + '.' : ', ' + tg.desc + '.'), parts: q6parts });
 
-    /* ---- Q7 ---- */
-    var L = d.lead.L, vv = d.lead.v;
-    function impact(ch, label) {
-      var L2 = r1(L * ch.f), v2 = ch.v2, tot0 = L + vv, tot1 = L2 + v2, short = ch.f < 1;
-      return {
-        model: '<ul><li><b>(a) Cycle stock ' + (short ? '↓' : '↑') + '</b>: cycle stock follows the lead time (' + L + ' → ' + F.num(L2, 1) + ' days).</li>' +
-          '<li><b>(b) Safety stock ' + (v2 < vv ? '↓' : '↑') + '</b>: safety stock covers uncertainty; variability goes from ±' + vv + ' to ±' + F.num(v2, 1) + ' days' + (v2 > vv ? ' (less reliable → bigger buffer)' : ' (more reliable → smaller buffer)') + '.</li>' +
-          '<li><b>(c) Order costs ' + (short ? '↑' : '↓') + '</b>: ' + (short ? 'to keep the lower cycle stock, ' + nm + ' orders smaller quantities more often.' : 'fewer, larger orders.') + '</li>' +
-          '<li><b>(d) Transportation costs ' + (short ? '↑' : '↓') + '</b>: ' + (short ? 'smaller, more frequent shipments lose consolidation (fewer full loads).' : 'larger shipments can be consolidated.') + '</li>' +
-          '<li><b>(e) ROA ' + (tot1 < tot0 ? '↑' : '↓') + '</b>: total stock goes from ' + tot0 + ' to ' + F.num(tot1, 1) + ' days, so inventory (assets) ' + (tot1 < tot0 ? 'falls and ROA rises' : 'rises and ROA falls') + ' — as long as the higher order/transport costs do not eat up the gain.</li></ul>',
-        check: ['(a) cycle stock direction + reason', '(b) safety stock direction + reason', '(c) order costs direction + reason', '(d) transport costs direction + reason', '(e) ROA direction + reason'] };
     }
+    /* ---- Q7 ---- */
+    if (v.q7 && v.q7.v && VX.q7 && VX.q7[v.q7.v]) Q.push(VX.q7[v.q7.v](d, x, v.q7)); else {
     if (v.q7.v === 'inventory') {
       var im = impact(v.q7.change);
       Q.push({ n: 7, area: 'scm', title: 'Inventory management', parts: [
@@ -224,7 +238,9 @@
       ] });
     }
 
+    }
     /* ---- Q8 ---- */
+    if (v.q8 && v.q8.v && VX.q8 && VX.q8[v.q8.v]) Q.push(VX.q8[v.q8.v](d, x, v.q8)); else {
     if (v.q8.v === 'criteria') {
       Q.push({ n: 8, area: 'scm', title: 'Supplier selection', parts: [
         { id: '8', pts: 10, prompt: nm + ' currently selects suppliers based solely on price through a competitive bidding process. Name and explain five additional criteria ' + nm + ' should consider when selecting suppliers.', open: true,
@@ -237,7 +253,9 @@
       ] });
     }
 
+    }
     /* ---- Q9 ---- */
+    if (v.q9 && v.q9.v && VX.q9 && VX.q9[v.q9.v]) Q.push(VX.q9[v.q9.v](d, x, v.q9)); else {
     if (v.q9.v === 'tlc') {
       var t9 = v.q9, pr = t9.units * t9.price, b9 = pr + t9.transport, du = b9 * t9.duty, sb = b9 + du, va = sb * t9.vat, tl = sb + va;
       Q.push({ n: 9, area: 'scm', title: 'Total landed cost', intro: 'When evaluating suppliers, ' + nm + '\'s procurement team initially compared suppliers based on purchase price alone.', parts: [
@@ -254,6 +272,7 @@
         { id: '9b', pts: 5, prompt: nm + ' is considering expanding its supplier base to include a supplier in ' + m9.far + '. Explain how switching to this supplier might affect ' + nm + '\'s inventory levels at the ' + d.plant + ' facility.', open: true,
           model: '<p>A supplier in ' + m9.far + ' means a much <b>longer lead time</b> (sea freight of several weeks) and usually <b>more variability</b> (port congestion, customs, weather). As a result: <b>cycle stock ↑</b> (more days to cover between orders, and larger, consolidated orders such as full containers), <b>safety stock ↑</b> (more uncertainty), and more <b>in-transit (pipeline) inventory</b> that ' + nm + ' may own depending on the terms of sale. The reorder point must be raised to cover the longer lead-time demand. Total inventory, and its carrying cost, will rise even if the purchase price is lower — so compare on total landed cost.</p>', check: ['Longer lead time → more cycle stock / higher reorder point', 'More variability → more safety stock', 'In-transit inventory / larger orders', 'Link to higher carrying cost / total landed cost'], need: 3 }
       ] });
+    }
     }
     Q.forEach(function (q) { q.parts.forEach(function (p) { p.area = q.area; }); });
     return { html: caseHTML(d, x), questions: Q, d: d, x: x };
@@ -404,8 +423,14 @@
     else { vq.q7 = { v: 'logistics' }; vq.q8 = r.chance(0.5) ? { v: 'supplier', change: ch } : { v: 'criteria' }; }
     if (r.chance(0.5)) { var fr = r.pick(FAR); vq.q9 = { v: 'tlc', origin: fr[0], item: co.item, price: r.range(0.5, 4, 0.05), units: r.pick([0.5, 1, 2, 4, 5]) * 1e6, duty: r.pick([0.05, 0.1, 0.12, 0.2, 0.3]), vat: co.country === 'Germany' ? 0.19 : co.country === 'Italy' ? 0.22 : 0.21 }; vq.q9.price = Math.round(vq.q9.price * 100) / 100; vq.q9.transport = Math.round(vq.q9.units * vq.q9.price * r.range(0.06, 0.2, 0.01) / 1e4) * 1e4; }
     else { var ms = r.pick(MODE_SCEN); vq.q9 = { v: 'mode', what: ms.what.replace('%MAT%', co.material).replace('%PLANT%', co.plant), situation: ms.situation, model: ms.model, check: ms.check, far: r.pick(FAR)[0] }; }
+    var VXg = FSM.caseVariants || {}, VPg = FSM.caseVariantParams || {};
+    [['q1', 0.6], ['q2', 0.35], ['q3', 0.5], ['q4', 0.35], ['q5', 0.5], ['q6', 0.4], ['q7', 0.5], ['q8', 0.5], ['q9', 0.5]].forEach(function (sp) {
+      var names = Object.keys(VXg[sp[0]] || {});
+      if (names.length && r.chance(sp[1])) { var nv = r.pick(names); vq[sp[0]] = Object.assign({ v: nv }, VPg[sp[0]][nv](r, d, x0)); }
+    });
     return d;
   }
 
+  FSM.caseHelpers = { E: E, Em: Em, P: P, N: N, r1: r1, avg: avg, steps: steps, f: f, derive: derive };
   FSM.cases = { buildExam: buildExam, generate: generate, MOCKS: [MOCK1, MOCK2], derive: derive };
 })(typeof window !== 'undefined' ? window : globalThis);
