@@ -94,3 +94,15 @@ mark { background: var(--warn-soft); color: inherit; padding: 0 2px; }
 .notes-btns button, .notes-btns .btn { min-height: 40px; padding: 7px 12px; font-size: .9rem; }
 .notes-cta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px; margin-top: 22px; }
 .page .nt-note h2 { border: 0; }
+.example .ex-title { padding: 12px 14px 0; font-weight: 600; }
+.example .body { padding: 6px 14px 12px; }
+.example .ex-q { margin: 0 0 8px; }
+.example .ex-steps:not(:has(li:not([hidden]))) { display: none; }
+.example.revealed .ex-steps { border-top: 1px dashed var(--line); padding-top: 8px; }
+.ex-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ex-acts button { min-height: 36px; padding: 6px 12px; font-size: .9rem; }
+.sum-ex .example { border: 0; background: transparent; margin: 0; }
+.sum-ex .example .ex-title, .sum-ex .example .body { padding-left: 0; padding-right: 0; }
+.sol-gate { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; }
+.sol-gate .sol-btn { min-height: 38px; padding: 7px 14px; }
+.sol-gate .sol-body { margin-top: 10px; overflow-x: auto; }

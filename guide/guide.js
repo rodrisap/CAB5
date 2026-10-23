@@ -59,7 +59,7 @@
     if (S.exec) h += '<div class="sum-exec"><div class="sum-label">Executive summary</div>' + S.exec.map(function (x) { return '<p>' + x + '</p>'; }).join('') + '</div><div class="sum-label">Double-check</div>';
     h += '<p class="sum-big">In one line: ' + S.big + '</p>';
     S.parts.forEach(function (pt) { h += '<h4>' + pt.h + '</h4><ul>' + pt.li.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>'; });
-    if (S.example) h += '<div class="sum-ex"><b>Example:</b> ' + S.example.q + '<ol>' + S.example.steps.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol></div>';
+    if (S.example) h += '<div class="sum-ex">' + exampleHTML('Example — try it first', S.example.q, S.example.steps) + '</div>';
     if (S.remember) h += '<div class="sum-rem"><b>Remember for the exam</b><ul>' + S.remember.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
     return h;
   }
@@ -110,6 +110,7 @@
     document.body.appendChild(ov);
     document.body.style.overflow = 'hidden';
     function close() { ov.remove(); document.body.style.overflow = ''; }
+    wireExamples(ov);
     ov.querySelector('#rdClose').onclick = close;
     ov.querySelector('#rdNote').onclick = function () { NT.open(); };
     var rs = ov.querySelector('#rdSum');
@@ -120,6 +121,23 @@
   css.textContent = '.reader-ov{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column}.reader-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--surface)}.reader-head .acts{display:flex;gap:6px;flex-wrap:wrap}.reader-head .btn,.reader-head button{min-height:38px;padding:7px 12px}.reader-body{flex:1;display:flex;min-height:0}.reader-ov iframe{flex:1;border:0;width:100%;background:#fff;min-width:0}.reader-sum{width:min(440px,45%);overflow:auto;border-left:1px solid var(--line);background:var(--surface)}.reader-sum .sum-panel{border:0;margin:0}@media(max-width:700px){.reader-body{flex-direction:column}.reader-sum{width:auto;max-height:55%;border-left:0;border-top:1px solid var(--line);order:-1}}';
   document.head.appendChild(css);
 
+  /* ---------- worked examples: question first, solution on demand ---------- */
+  function exampleHTML(title, qHtml, steps) {
+    return '<div class="example">' + (title ? '<div class="ex-title">' + esc(title) + '</div>' : '') + '<div class="body"><p class="ex-q">' + qHtml + '</p>' +
+      '<ol class="ex-steps">' + steps.map(function (s) { return '<li hidden>' + s + '</li>'; }).join('') + '</ol>' +
+      '<div class="ex-acts"><button type="button" class="ghost ex-next">Show next step</button><button type="button" class="ex-all">Show solution</button><span class="small muted ex-count">' + steps.length + ' steps</span></div></div></div>';
+  }
+  function wireExamples(el) {
+    el.querySelectorAll('.example').forEach(function (ex) {
+      var lis = ex.querySelectorAll('.ex-steps li'), nb = ex.querySelector('.ex-next'), ab = ex.querySelector('.ex-all'), cnt = ex.querySelector('.ex-count');
+      if (!nb) return;
+      function shown() { var n = 0; lis.forEach(function (li) { if (!li.hidden) n++; }); return n; }
+      function sync() { var n = shown(); nb.style.display = n >= lis.length ? 'none' : ''; ab.textContent = n >= lis.length ? 'Hide solution' : 'Show solution'; cnt.textContent = n ? n + ' / ' + lis.length + ' steps shown' : lis.length + ' steps'; ex.classList.toggle('revealed', n > 0); }
+      nb.onclick = function () { for (var i = 0; i < lis.length; i++) if (lis[i].hidden) { lis[i].hidden = false; break; } sync(); };
+      ab.onclick = function () { var all = shown() >= lis.length; lis.forEach(function (li) { li.hidden = all; }); sync(); };
+    });
+  }
+
   /* ---------- page rendering ---------- */
   function practiceLink(topic) { return '../practice/index.html#topic=' + topic; }
   function renderStudyPage(p) {
@@ -127,9 +145,12 @@
     if (p.html) h += p.html;
     if (p.glance) h += '<div class="glance"><div class="box"><h3>This week at a glance</h3><ul>' + p.glance.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div><div class="box"><h3>After this you can…</h3><ul>' + (p.goals || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div></div>';
     if (p.readings && p.readings.length) h += '<h2>What to read</h2>' + p.readings.map(readingRow).join('');
-    if (p.sections) p.sections.forEach(function (s) { h += '<h2>' + esc(s.h) + '</h2>' + s.html; });
+    if (p.sections) p.sections.forEach(function (s) {
+      if (/^Official solution/.test(s.h)) h += '<h2>' + esc(s.h) + '</h2><div class="sol-gate"><p class="small muted">Work it out yourself first (use the case exam to practise), then reveal and compare.</p><button type="button" class="sol-btn">Show official solution</button><div class="sol-body" hidden>' + s.html + '</div></div>';
+      else h += '<h2>' + esc(s.h) + '</h2>' + s.html;
+    });
     if (p.formulas && p.formulas.length) h += '<h2>Formula cards</h2>' + p.formulas.map(function (f) { return '<div class="fcard"><b>' + esc(f.n) + '</b><br><span class="f">' + esc(f.f) + '</span><div class="when"><b>When:</b> ' + esc(f.when) + '</div><div class="when"><b>Watch out:</b> ' + esc(f.trap) + '</div></div>'; }).join('');
-    if (p.examples && p.examples.length) h += '<h2>Worked examples</h2><p class="small muted">Try each one yourself first, then open the solution.</p>' + p.examples.map(function (e) { return '<details class="example"><summary>' + esc(e.title) + '</summary><div class="body"><p>' + esc(e.q) + '</p><ol>' + e.steps.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol></div></details>'; }).join('');
+    if (p.examples && p.examples.length) h += '<h2>Worked examples</h2><p class="small muted">Solve each one on paper first. Stuck? Reveal one step at a time. Done? Show the full solution and compare.</p>' + p.examples.map(function (e) { return exampleHTML(e.title, esc(e.q), e.steps); }).join('');
     if (p.practice) h += '<div class="practice-cta"><div><b>Practice this</b><div class="small">Drill until every skill shows “Mastered”.</div></div><a class="btn" href="' + practiceLink(p.practice) + '">Open practice for ' + esc(p.label || p.title) + ' →</a></div>';
     if (p.special === 'exam') h += '<div class="practice-cta"><div><b>Exam simulation</b><div class="small">Timed, mixed, formula sheet available, feedback only at the end.</div></div><a class="btn" href="../practice/index.html#exam">Start exam simulation →</a></div>';
     if (p.id !== 'start') { var mn = NT.forPage(p.id).length; h += '<div class="notes-cta"><div><b>✎ Your notes for this page</b><div class="small muted">' + (mn ? mn + ' note' + (mn === 1 ? '' : 's') + ' so far.' : 'Write the 2–3 things you want to remember, in your own words.') + '</div></div><button type="button" class="ghost" id="pgNote">' + (mn ? 'Open notes' : 'Write a note') + '</button></div>'; }
@@ -138,6 +159,8 @@
     h += '<div class="pagenav">' + (prev ? '<a class="btn ghost" href="#' + prev + '">← ' + esc(byId[prev].title) + '</a>' : '<span></span>') + (next ? '<a class="btn ghost" href="#' + next + '">' + esc(byId[next].title) + ' →</a>' : '') + '</div>';
     pageEl.innerHTML = h;
     wireReadings(pageEl);
+    wireExamples(pageEl);
+    pageEl.querySelectorAll('.sol-gate').forEach(function (g) { var b = g.querySelector('.sol-btn'), body = g.querySelector('.sol-body'); b.onclick = function () { body.hidden = !body.hidden; b.textContent = body.hidden ? 'Show official solution' : 'Hide official solution'; b.className = body.hidden ? 'sol-btn' : 'sol-btn ghost'; }; });
     var pn = document.getElementById('pgNote'); if (pn) pn.onclick = function () { NT.open(); };
     var pd = document.getElementById('pageDone');
     if (pd) pd.onchange = function () { done['page:' + p.id] = pd.checked; store('fsm.guide.done', done); renderSidebar(p.id); };
@@ -157,6 +180,7 @@
     h += '<div class="callout info"><b>Phone tip</b>On iPhone/iPad, “Open full screen” may always start at page 1 — scroll to the page shown at the top. Chrome, Edge and Firefox on a laptop jump straight to the right page.</div>';
     pageEl.innerHTML = h;
     wireReadings(pageEl);
+    wireExamples(pageEl);
     pageEl.querySelectorAll('.bookcard').forEach(function (card) {
       var b = card.getAttribute('data-book'), st = card.querySelector('.bk-status');
       function refresh() {
