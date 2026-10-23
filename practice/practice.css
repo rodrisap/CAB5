@@ -101,3 +101,33 @@
 .mnote.mastered { background: var(--good-soft); }
 .mnote details { margin-top: 4px; }
 @media (max-width: 600px) { .plan-when { text-align: left; max-width: none; } }
+
+.topbar .meter { flex: 1; min-width: 200px; max-width: 460px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); margin: 0 12px; }
+.meter-bar { position: relative; flex: 1; height: 10px; background: var(--surface-2); border-radius: 6px; display: block; }
+.meter-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 6px; transition: width .4s; display: block; }
+.tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); display: block; }
+.tick i { position: absolute; top: calc(100% + 3px); left: 1px; transform: translateX(-50%); font-style: normal; font-size: .66rem; color: var(--muted); white-space: nowrap; }
+.meter-label { font-size: .82rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.big-bar { height: 14px; margin-top: 10px; }
+.hero2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 14px; align-items: stretch; }
+.hero2 > .card { margin: 14px 0 0; }
+.big { font-size: 3rem; font-weight: 700; line-height: 1; }
+.dots { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; }
+.dots i.on { background: var(--good); }
+.dots i.half { background: var(--warn); }
+.plan-list { display: flex; flex-direction: column; gap: 8px; }
+.plan-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.plan-row .idx { color: var(--muted); font-size: .85rem; }
+.plan-row .t b { display: block; }
+.plan-row .t span { font-size: .85rem; color: var(--muted); }
+.plan-row .pts { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.plan-row .go { display: flex; gap: 8px; align-items: center; }
+.plan-row .go .btn { min-height: 34px; padding: 5px 12px; }
+.plan-row.done { border-color: var(--good); }
+@media (max-width: 760px) {
+  .hero2 { grid-template-columns: 1fr; }
+  .topbar .meter { order: 5; flex-basis: 100%; max-width: none; margin: 4px 0 10px; }
+  .plan-row { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .plan-row .go { grid-column: 2 / -1; }
+}

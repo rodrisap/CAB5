@@ -37,7 +37,7 @@
     if (a.score < 1) S.mistakes[id] = (S.mistakes[id] || 0) + 1;
     else if (S.mistakes[id]) { S.mistakes[id]--; if (!S.mistakes[id]) delete S.mistakes[id]; }
     updateSR(id, a);
-    save(); updateBadge();
+    save(); updateBadge(); refreshMeter();
   }
   function rawMastered(id) {
     var at = attemptsOf(id);
@@ -142,6 +142,22 @@
     return 'At least ' + g + ' more correct answer' + (g === 1 ? '' : 's') + ' to master (≈ ' + dur(g * minutesPer(id)) + ')';
   }
 
+  /* ---------- estimated exam score (like the CAB4 Pass Kit) ----------
+     Exam points per topic, based on both mocks: Q1–6 finance = 70, Q7–9 SCM = 30. */
+  var POINTS = { fin_w1: 7, fin_w2: 4, fin_w3: 15, fin_w4: 9, fin_w5: 18, fin_w6: 14, fin_case: 3, scm_ch5: 9, scm_ch9: 8, scm_ch11: 6, scm_ch3: 4, scm_ch1: 2, scm_ch2: 1 };
+  var WHY = { fin_w1: 'Q1: corporate forms, tax, bid/ask, raising funds', fin_w2: 'Q1 variants: ratios, cash vs accrual', fin_w3: 'Q2 CCC + resources, Q3 credit policy', fin_w4: 'Q3: funding options, € cost and EAR', fin_w5: 'Q4 DOL/DFL/DTL, Q5 WACC', fin_w6: 'Q5 double taxation/FX, Q6 consolidation', fin_case: 'Finding the right numbers in a case', scm_ch5: 'Q8 supplier criteria, Q9 total landed cost', scm_ch9: 'Q7 cutting inventory, new-supplier impact', scm_ch11: 'Q9 choosing transport modes', scm_ch3: 'Q7 logistics definition, 7 Rs', scm_ch1: 'SCM overview concepts', scm_ch2: 'Global supply chain concepts' };
+  function topicScore(tid) { var p = topicProgress(tid); return p.total ? (POINTS[tid] || 0) * p.done / p.total : 0; }
+  function estScore() { return Math.round(Object.keys(POINTS).reduce(function (a, t) { return a + topicScore(t); }, 0)); }
+  function refreshMeter() {
+    var sc = estScore(), f = document.getElementById('meterFill'), l = document.getElementById('meterLabel');
+    if (f) f.style.width = Math.min(100, sc) + '%';
+    if (l) l.textContent = sc + ' / 100 mastered';
+  }
+  function critDots(id) {
+    var c = checks(attemptsOf(id), FSM.skills[id]), on = [c.nLast >= 4 && c.avg >= 0.85, c.formats.length >= 3, c.fresh >= 2, c.last2];
+    return '<span class="dots" title="Mastery rules met: ' + on.filter(Boolean).length + ' of 4">' + on.map(function (x) { return '<i class="' + (x ? 'on' : '') + '"></i>'; }).join('') + '</span>';
+  }
+
   function topicProgress(tid) {
     var sk = FSM.skillsFor(tid);
     var m = sk.filter(function (s) { var k = status(s.id).k; return k === 'mastered'; }).length;
@@ -190,7 +206,23 @@
     var h = '<div class="hero"><div><h1>Financial &amp; Supply Chain Management</h1><p class="muted">Every question is generated fresh: new numbers, wording, layout and question type. Memorising won\'t work — understanding will.</p></div>' +
       '<div class="countdown">' + (cd !== null ? '<b>' + (cd >= 0 ? cd : 0) + '</b><span class="muted">days to exam</span>' : '<a href="#settings">Set exam date</a>') + '</div></div>';
     if (S.last && FSM.skills[S.last.skill]) h += '<div class="btnrow"><a class="btn" href="#' + (S.last.mode === 'learn' ? 'learn=' + S.last.topic : 'drill=' + S.last.skill) + '">Continue: ' + esc(FSM.skills[S.last.skill].title) + '</a>' + (Object.keys(S.mistakes).length ? '<a class="btn ghost" href="#review">Review ' + Object.keys(S.mistakes).length + ' weak skills</a>' : '') + '</div>';
-    h += planCard(Object.keys(FSM.skills), 'everything');
+    var sc = estScore();
+    h += '<div class="hero2"><div class="card score-card"><div class="small muted">Estimated exam score (mastered skills)</div><div><span class="big">' + sc + '</span><span class="muted"> / 100</span></div>' +
+      '<div class="meter-bar big-bar"><span class="meter-fill" style="width:' + Math.min(100, sc) + '%"></span><span class="tick" style="left:55%"><i>55 pass</i></span><span class="tick" style="left:70%"><i>70 safe</i></span></div>' +
+      '<p class="small" style="margin-top:22px">' + (sc >= 70 ? 'Above your 70 safety margin. Keep it fresh with the case exam and the re-checks.' : sc >= 55 ? 'You\'d pass. ' + (70 - sc) + ' more points to reach a safe 70.' : (55 - sc) + ' points to a pass, ' + (70 - sc) + ' to a safe 70.') + '</p>' +
+      '<p class="small muted">Each topic is worth the points it carried on the mocks; you earn them as you master its skills. Last time 70% "mastered" wasn\'t enough because the questions could be memorised; here every question is new, so these points are earned.</p></div>' +
+      planCard(Object.keys(FSM.skills), 'everything') + '</div>';
+    // pass plan: most exam points per remaining answer first
+    var rows = Object.keys(POINTS).filter(function (t) { return FSM.skillsFor(t).length; }).map(function (t) {
+      var ids = FSM.skillsFor(t).map(function (s) { return s.id; }), pl = planFor(ids), left = POINTS[t] - topicScore(t);
+      return { t: t, pl: pl, left: left, rate: pl.answers ? left / pl.answers : -1, prog: topicProgress(t) };
+    }).sort(function (a, b) { return b.rate - a.rate; });
+    var nextT = rows.filter(function (r) { return r.pl.skillsLeft; })[0];
+    h += '<div class="card"><h2 style="margin-top:0">Pass plan</h2><p class="small muted">Ordered by exam points per answer still needed: work top to bottom.' + (nextT ? '' : ' Everything is mastered!') + '</p>' + (nextT ? '<div class="btnrow"><a class="btn" href="#learn=' + nextT.t + '">Next: ' + esc(FSM.topics.filter(function (x) { return x.id === nextT.t; })[0].title) + '</a></div>' : '') + '<div class="plan-list">' +
+      rows.map(function (r, i) {
+        var t = FSM.topics.filter(function (x) { return x.id === r.t; })[0], done = !r.pl.skillsLeft;
+        return '<div class="plan-row' + (done ? ' done' : '') + '"><span class="idx">' + ('0' + (i + 1)).slice(-2) + '</span><div class="t"><b>' + esc(t.title) + '</b><span>' + esc(WHY[r.t] || '') + ' · ' + (done ? 'mastered' : r.pl.answers + ' correct answers to go') + '</span></div><span class="pts">' + (Math.round(topicScore(r.t) * 10) / 10) + ' / ' + POINTS[r.t] + 'p</span><span class="go"><span class="dots">' + FSM.skillsFor(r.t).map(function (s) { return '<i class="' + (status(s.id).k === 'mastered' ? 'on' : status(s.id).k === 'almost' ? 'half' : '') + '"></i>'; }).join('') + '</span><a class="btn ghost" href="#topic=' + r.t + '">Open</a></span></div>';
+      }).join('') + '</div></div>';
     h += '<a class="card topic-card" href="case.html" style="border-color:var(--accent)"><span class="tag fin">Exam format</span><h3>Case exam: mock 1, mock 2 and new cases</h3><div class="small muted">One company case, 9 questions, 2 hours, pass at 55. Practise here once your skills are mastered.</div></a>';
     if (due.length) h += '<div class="card"><b>Spaced repetition:</b> ' + due.length + ' mastered skill(s) are due for a re-check. <a href="#drill=' + due[0] + '">Start</a></div>';
     ['Finance', 'Supply Chain'].forEach(function (area) {
@@ -232,11 +264,11 @@
     if (!t) return showHome();
     var sk = FSM.skillsFor(tid);
     var h = '<p class="small"><a href="#home">← All topics</a></p><h1>' + esc(t.title) + '</h1><p class="muted">' + esc(t.read || '') + '</p>' +
-      planCard(sk.map(function (s) { return s.id; }), 'this topic') + '<div class="btnrow"><a class="btn" href="#learn=' + tid + '">Learn this topic (mixed)</a><a class="btn ghost" href="../guide/index.html#' + (t.guide || tid) + '">Read the notes</a></div><div class="card">';
+      (POINTS[tid] ? '<p class="small">Worth about <b>' + POINTS[tid] + ' exam points</b> (' + esc(WHY[tid]) + '). You have ' + (Math.round(topicScore(tid) * 10) / 10) + ' of them mastered.</p>' : '') + planCard(sk.map(function (s) { return s.id; }), 'this topic') + '<div class="btnrow"><a class="btn" href="#learn=' + tid + '">Learn this topic (mixed)</a><a class="btn ghost" href="../guide/index.html#' + (t.guide || tid) + '">Read the notes</a></div><div class="card">';
     sk.forEach(function (s) {
       var st = status(s.id);
       h += '<div class="skill-row"><div><b>' + esc(s.title) + '</b><div class="small muted">' + (attemptsOf(s.id).length ? masteryDetail(s.id) : (s.kind === 'concept' ? 'Concept questions' : 'Calculation')) + '</div><div class="small togo ' + st.k + '">' + esc(goLine(s.id)) + '</div>' + (attemptsOf(s.id).length && st.k !== 'mastered' ? '<details class="small"><summary>What still counts?</summary>' + checklistHTML(s.id) + '</details>' : '') + '</div>' +
-        '<div style="display:flex;gap:8px;align-items:center"><span class="status ' + st.k + '">' + st.label + '</span><a class="btn ghost" href="#drill=' + s.id + '">Drill</a></div></div>';
+        '<div style="display:flex;gap:8px;align-items:center">' + (st.k === 'mastered' ? '' : critDots(s.id)) + '<span class="status ' + st.k + '">' + st.label + '</span><a class="btn ghost" href="#drill=' + s.id + '">Drill</a></div></div>';
     });
     h += '</div><p class="small muted">Mastered = ≥85% over your last 12 tries, correct in at least 3 different question formats, fresh numbers, and your last 2 answers right without hints. Mastered skills come back after 1, 3 and 7 days.</p>';
     view.innerHTML = h;
@@ -443,7 +475,7 @@
     var nb = document.getElementById('nextBtn'); if (!nb) return;
     var st = status(id).k;
     var div = document.createElement('div'); div.id = 'masteryNote'; div.className = 'mnote ' + st;
-    div.innerHTML = '<b>' + esc(FSM.skills[id].title) + ':</b> ' + esc(goLine(id)) + (st === 'mastered' ? ' 🎉' : '') + '<details><summary class="small">What still counts?</summary>' + checklistHTML(id) + '</details>';
+    div.innerHTML = (st === 'mastered' ? '' : critDots(id) + ' ') + '<b>' + esc(FSM.skills[id].title) + ':</b> ' + esc(goLine(id)) + (st === 'mastered' ? ' 🎉' : '') + '<details><summary class="small">What still counts?</summary>' + checklistHTML(id) + '</details>';
     var host = nb.parentNode; host.parentNode.insertBefore(div, host.nextSibling);
   }
 
@@ -627,7 +659,7 @@
       rd.onload = function () { try { S = Object.assign(blank(), JSON.parse(rd.result)); save(); alert('Progress imported.'); location.hash = '#home'; } catch (err) { alert('That file could not be read.'); } };
       rd.readAsText(f);
     };
-    document.getElementById('stReset').onclick = function () { if (confirm('Delete all your progress? This cannot be undone.')) { S = blank(); save(); updateBadge(); location.hash = '#home'; } };
+    document.getElementById('stReset').onclick = function () { if (confirm('Delete all your progress? This cannot be undone.')) { S = blank(); save(); updateBadge(); refreshMeter(); location.hash = '#home'; } };
   }
 
   /* used by the automated rendering checks */
@@ -639,5 +671,6 @@
   };
 
   updateBadge();
+  refreshMeter();
   route();
 })();
