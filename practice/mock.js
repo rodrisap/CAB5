@@ -190,8 +190,9 @@
     q.parts.forEach(function (p) {
       var el = view.querySelector('.xpart[data-pid="' + p.id + '"]'), a = cur.A.answers[p.id] || {};
       el.querySelectorAll('input, textarea').forEach(function (i) { i.disabled = true; });
+      var hints = el.querySelectorAll('.fhint');
       if (p.fields) p.fields.forEach(function (f, i) {
-        var ok = !gaveUp && gradeField(f, a[i]), hint = el.querySelectorAll('.fhint')[i];
+        var ok = !gaveUp && gradeField(f, a[i]), hint = hints[i];
         hint.className = 'fres ' + (ok ? 'ok' : 'no'); hint.textContent = ok ? '✓' : '✗ ' + fmtAns(f);
       });
       var h = '<details class="model" open><summary>Model answer' + (p.fields ? ' & calculation' : '') + '</summary>' + p.model + (p.extra || '') + '</details>';
