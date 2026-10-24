@@ -2,7 +2,7 @@
 global.window = global; global.document = { getElementById: function () { return { set onclick(v) {}, set innerHTML(v) {}, classList: { toggle: function () {}, remove: function () {} }, style: {} }; }, documentElement: { setAttribute: function () {}, getAttribute: function () { return 'light'; } } };
 global.localStorage = { getItem: function () { return null; }, setItem: function () {} };
 global.location = { hash: '' }; global.addEventListener = function () {}; global.matchMedia = function () { return { matches: false }; };
-['shared/rng.js', 'shared/format.js', 'shared/formula-sheet.js', 'practice/case-data.js', 'practice/case-variants.js', 'practice/mock.js'].forEach(function (f) { require('../' + f); });
+['shared/rng.js', 'shared/format.js', 'shared/formula-sheet.js', 'practice/case-data.js', 'practice/case-variants.js', 'practice/case-explain.js', 'practice/mock.js'].forEach(function (f) { require('../' + f); });
 var M = window.FSM_MOCK, bad = 0, n = 0;
 M.TYPES.forEach(function (t) {
   var srcs = []; for (var s = 1; s <= 60; s++) srcs.push(s * 37);
