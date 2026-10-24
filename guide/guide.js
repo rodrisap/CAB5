@@ -307,10 +307,12 @@
     var all = FC.all(), due = FC.due(), now = Date.now();
     var soon = all.filter(function (c) { return c.due > now && c.due < now + 7 * 86400000; }).length;
     var hasF = all.some(function (c) { return c.deck === 'formulas'; }), hasG = all.some(function (c) { return c.deck === 'glossary'; });
-    var h = '<div class="crumb">Start</div><h1>Flashcards</h1><p class="muted">Make a card for anything you keep forgetting: a formula, a definition, a trap. Each card comes back right before you would forget it: after 1, 3, 7, 14 and 30 days if you know it, within minutes if you don\'t. When cards are due, you see it on the ✎ Notes button and in the sidebar, on every page.</p>';
+    var h = '<div class="crumb">Start</div><h1>Flashcards</h1><p class="muted">I made a course deck for you, built around the mock exams (see below). You can add your own cards too, for anything you keep forgetting. Each card comes back right before you would forget it: after 1, 3, 7, 14 and 30 days if you know it, within minutes if you don\'t. When cards are due, you see it on the ✎ Notes button and in the sidebar, on every page.</p>';
     h += '<div class="cards-stats"><div class="card"><div class="big-n">' + due.length + '</div><div class="small muted">due now</div></div><div class="card"><div class="big-n">' + soon + '</div><div class="small muted">due this week</div></div><div class="card"><div class="big-n">' + all.length + '</div><div class="small muted">cards in total</div></div></div>';
     h += '<div class="btnrow notes-btns">' + (due.length ? '<button type="button" id="cRev">Review ' + due.length + ' due card' + (due.length === 1 ? '' : 's') + ' (≈ ' + Math.max(1, Math.round(due.length * 0.4)) + ' min)</button>' : '<button type="button" disabled>Nothing due right now ✓</button>') + '<button type="button" class="ghost" id="cAdd">＋ New card</button></div>';
-    h += '<div class="card"><b>Ready-made decks</b> <span class="small muted">(optional: they mix in with your own cards, 20 new cards a day so it never piles up)</span><div class="btnrow notes-btns" style="margin-top:8px">' +
+    var cn = all.filter(function (c) { return c.deck === 'course'; }), cnSeen = cn.filter(function (c) { return c.n; }).length;
+    h += '<div class="card"><b>Course deck</b> <span class="small muted">· written for this exam: every formula, method and trap from the mocks first, then the rest of the slides</span><p class="small" style="margin:6px 0 0">' + (FC.course.on() ? cn.length + ' cards · ' + cnSeen + ' studied so far · ' + FC.course.perDay + ' new cards unlock each day, mock-exam topics first.' : 'Switched off.') + '</p><div class="btnrow notes-btns" style="margin-top:8px">' + (FC.course.on() ? '<button type="button" class="ghost" id="cCourseOff">Remove course deck</button>' : '<button type="button" id="cCourseOn">Add the course deck (' + FC.course.total() + ' cards)</button>') + '</div></div>';
+    h += '<div class="card"><b>Extra decks</b> <span class="small muted">(optional, 20 new cards a day)</span><div class="btnrow notes-btns" style="margin-top:8px">' +
       (hasF ? '<button type="button" class="ghost" data-rm="formulas">Remove formula-sheet deck</button>' : '<button type="button" class="ghost" data-add="formulas">＋ Formula sheet (' + FSM.FORMULAS.reduce(function (n, g) { return n + g.items.length; }, 0) + ' cards)</button>') +
       (hasG ? '<button type="button" class="ghost" data-rm="glossary">Remove glossary deck</button>' : '<button type="button" class="ghost" data-add="glossary">＋ Glossary terms (' + glossaryItems().length + ' cards)</button>') + '</div></div>';
     h += '<div class="notes-tools"><input type="search" id="cfilter" placeholder="Search your cards…" value="' + esc(cardFilter) + '"></div><div id="clist"></div>';
@@ -319,9 +321,9 @@
     function draw() {
       var q = cardFilter.toLowerCase(), groups = {}, order = [];
       FC.all().filter(function (c) { return !q || (c.front + ' ' + c.back + ' ' + c.title).toLowerCase().indexOf(q) >= 0; }).sort(function (a, b) { return a.due - b.due; }).forEach(function (c) {
-        var k = c.deck === 'mine' ? c.page : 'deck:' + c.deck; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(c);
+        var k = c.deck === 'mine' || c.deck === 'course' ? c.page : 'deck:' + c.deck; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(c);
       });
-      var label = function (k) { return k === 'deck:formulas' ? 'Formula-sheet deck' : k === 'deck:glossary' ? 'Glossary deck' : byId[k] ? (byId[k].label ? byId[k].label + ' · ' : '') + byId[k].title : (groups[k][0].title || 'General'); };
+      var label = function (k) { return k === 'deck:course' ? 'Course deck' : k === 'deck:formulas' ? 'Formula-sheet deck' : k === 'deck:glossary' ? 'Glossary deck' : byId[k] ? (byId[k].label ? byId[k].label + ' · ' : '') + byId[k].title : (groups[k][0].title || 'General'); };
       document.getElementById('clist').innerHTML = order.length ? order.map(function (k) {
         var g = groups[k];
         return '<details class="cgroup"' + (order.length <= 3 || k.indexOf('deck:') ? ' open' : '') + '><summary><b>' + esc(label(k)) + '</b> <span class="small muted">(' + g.length + (g.filter(function (c) { return c.due <= Date.now(); }).length ? ', ' + g.filter(function (c) { return c.due <= Date.now(); }).length + ' due' : '') + ')</span></summary>' +
@@ -347,6 +349,8 @@
       FC.addMany(list);
     }; });
     pageEl.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { if (confirm('Remove this deck (and its review progress)? Your own cards stay.')) FC.removeDeck(b.getAttribute('data-rm')); }; });
+    var co = document.getElementById('cCourseOff'); if (co) co.onclick = function () { if (confirm('Remove the course deck and its review progress? Your own cards stay.')) FC.course.remove(); };
+    var cn2 = document.getElementById('cCourseOn'); if (cn2) cn2.onclick = function () { FC.course.restore(); };
     document.getElementById('cBak').onclick = function () { download('fsm-flashcards-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(FC.all(), null, 1), 'application/json'); };
     document.getElementById('cRes').onchange = function (e) {
       var f = e.target.files[0]; if (!f) return;

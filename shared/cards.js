@@ -50,6 +50,27 @@
   };
   window.addEventListener('storage', function (e) { if (e.key === KEY) listeners.forEach(function (f) { f(); }); });
 
+  /* ---------- the course deck (written for this exam) is added automatically ---------- */
+  var OFF = 'fsm.cards.courseOff', PER_DAY = 25;
+  function courseOff() { try { return localStorage.getItem(OFF) === '1'; } catch (e) { return false; } }
+  function installCourse() {
+    var D = root.FSM_COURSE_CARDS; if (!D || courseOff()) return 0;
+    var a = load(), have = {}; a.forEach(function (c) { have[c.id] = 1; });
+    var newOnes = D.cards.filter(function (c) { return !have[c.id]; }); if (!newOnes.length) return 0;
+    var base = Date.now() - 1000;
+    newOnes.forEach(function (c, i) { a.push({ id: c.id, front: c.front, back: c.back, page: c.page, title: c.title, deck: 'course', box: 0, due: base + Math.floor(i / PER_DAY) * DAY + i, t: Date.now(), n: 0 }); });
+    try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {}
+    return newOnes.length;
+  }
+  C.course = {
+    on: function () { return !!root.FSM_COURSE_CARDS && !courseOff(); },
+    total: function () { return root.FSM_COURSE_CARDS ? root.FSM_COURSE_CARDS.cards.length : 0; },
+    remove: function () { try { localStorage.setItem(OFF, '1'); } catch (e) {} C.removeDeck('course'); },
+    restore: function () { try { localStorage.removeItem(OFF); } catch (e) {} installCourse(); listeners.forEach(function (f) { f(); }); },
+    perDay: PER_DAY
+  };
+  installCourse();
+
   /* ---------- styles ---------- */
   var css = document.createElement('style');
   css.textContent =
