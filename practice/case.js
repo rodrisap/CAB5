@@ -71,6 +71,14 @@
     h += '</section></div>';
     view.innerHTML = h;
     wire(cur);
+    if (cur.submitted && window.FSMAsk) view.querySelectorAll('.xpart').forEach(function (el) {
+      var p = findPart(el.getAttribute('data-pid')), m = el.querySelector('details.model'); if (!p || !m) return;
+      m.parentNode.insertBefore(window.FSMAsk.box(function () {
+        var a = cur.answers[p.id] || {}, q = exam.questions.filter(function (qq) { return qq.parts.indexOf(p) >= 0; })[0] || {};
+        var tmp = document.createElement('div'); tmp.innerHTML = (q.intro || '') + '\n' + p.prompt;
+        return { question: 'Case company: ' + d.name + '\n' + tmp.textContent, mine: ((p.fields || []).map(function (f, i) { return f.label + ': ' + (a[i] || '(empty)'); }).join('\n') + '\n' + (cur.notes[p.id] || '')).trim(), model: m.innerText };
+      }), m.nextSibling);
+    });
     if (!cur.submitted && cur.timer) startTimer(cur); else document.getElementById('clock').textContent = cur.submitted ? '' : 'no timer';
     window.scrollTo(0, 0);
   }

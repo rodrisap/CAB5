@@ -199,6 +199,13 @@
       if (p.check && !gaveUp) h += '<div class="selfgrade"><b>Mark your written answer:</b> tick only what you really covered' + (p.need ? ' (full marks at ' + p.need + ')' : '') + '<div class="checks">' + p.check.map(function (c, k) { return '<label><input type="checkbox" data-k="' + k + '"> ' + esc(c) + '</label>'; }).join('') + '</div></div>';
       h += '<div class="pscore">Points: <b data-score="' + p.id + '">' + F.num(gaveUp ? 0 : partScore(p, cur.A), 1) + '</b> / ' + p.pts + '</div>';
       el.querySelector('.pres').innerHTML = h;
+      if (window.FSMAsk) (function (p, el, a) {
+        el.querySelector('.pres').appendChild(window.FSMAsk.box(function () {
+          var ans = (p.fields || []).map(function (f, i) { return f.label + ': ' + (a[i] || '(empty)'); }).join('\n'), notes = el.querySelector('textarea.notes').value;
+          var tmp = document.createElement('div'); tmp.innerHTML = (cur.b.q.intro || '') + '\n' + p.prompt;
+          return { question: 'Case company: ' + cur.b.d.name + '\n' + tmp.textContent, mine: (ans + (notes ? '\n' + notes : '')).trim(), model: el.querySelector('details.model').innerText };
+        }));
+      })(p, el, a);
       el.querySelectorAll('.checks input').forEach(function (cb) {
         cb.onchange = function () { var arr = cur.A.self[p.id] = cur.A.self[p.id] || []; arr[+cb.getAttribute('data-k')] = cb.checked; el.querySelector('[data-score]').textContent = F.num(partScore(p, cur.A), 1); showTotal(); };
       });

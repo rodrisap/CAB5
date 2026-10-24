@@ -135,6 +135,10 @@
     el.querySelectorAll('.example').forEach(function (ex) {
       var lis = ex.querySelectorAll('.ex-steps li'), nb = ex.querySelector('.ex-next'), ab = ex.querySelector('.ex-all'), cnt = ex.querySelector('.ex-count');
       if (!nb) return;
+      if (window.FSMAsk && !ex.querySelector('.askbox')) ex.querySelector('.body').appendChild(window.FSMAsk.box(function () {
+        var t = ex.querySelector('.ex-title'), steps = []; lis.forEach(function (li) { steps.push(li.textContent); });
+        return { question: (t ? t.textContent + '\n' : '') + ex.querySelector('.ex-q').textContent, model: steps.map(function (x, i) { return (i + 1) + '. ' + x; }).join('\n') };
+      }));
       function shown() { var n = 0; lis.forEach(function (li) { if (!li.hidden) n++; }); return n; }
       function sync() { var n = shown(); nb.style.display = n >= lis.length ? 'none' : ''; ab.textContent = n >= lis.length ? 'Hide solution' : 'Show solution'; cnt.textContent = n ? n + ' / ' + lis.length + ' steps shown' : lis.length + ' steps'; ex.classList.toggle('revealed', n > 0); }
       nb.onclick = function () { for (var i = 0; i < lis.length; i++) if (lis[i].hidden) { lis[i].hidden = false; break; } sync(); };
