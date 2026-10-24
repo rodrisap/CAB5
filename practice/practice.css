@@ -140,3 +140,10 @@ details.casebox { margin: 10px 0 14px; border: 1px solid var(--line); border-rad
 details.casebox > summary { cursor: pointer; padding: 10px 14px; }
 details.casebox .casedoc { position: static; max-height: 60vh; border: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); }
 .section-title { margin-top: 26px; }
+details.wkgroup { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin: 10px 0; padding: 4px 14px 10px; }
+details.wkgroup > summary { cursor: pointer; padding: 10px 0; }
+details.wkgroup .plan-list { margin-top: 4px; }
+.srctag { font-size: .7rem; font-weight: 700; border-radius: 99px; padding: 2px 7px; }
+.srctag.mk { background: var(--accent-soft); color: var(--accent); }
+.srctag.sl { background: var(--surface-2); color: var(--muted); }
+.plan-row { grid-template-columns: 52px minmax(0, 1fr) auto auto; }

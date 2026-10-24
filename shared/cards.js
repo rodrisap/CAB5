@@ -50,24 +50,34 @@
   };
   window.addEventListener('storage', function (e) { if (e.key === KEY) listeners.forEach(function (f) { f(); }); });
 
-  /* ---------- the course deck (written for this exam) is added automatically ---------- */
-  var OFF = 'fsm.cards.courseOff', PER_DAY = 25;
+  /* ---------- the course deck (written for this exam), unlocked week by week ---------- */
+  var OFF = 'fsm.cards.courseOff', WK = 'fsm.study.weeks';
+  var PAGES = ['fin_w1', 'fin_w2', 'fin_w3', 'fin_w4', 'fin_w5', 'fin_w6', 'case', 'scm_ch1', 'scm_ch2', 'scm_ch3', 'scm_ch5', 'scm_ch9', 'scm_ch11'];
+  var LABEL = { fin_w1: 'Week 1', fin_w2: 'Week 2', fin_w3: 'Week 3', fin_w4: 'Week 4', fin_w5: 'Week 5', fin_w6: 'Week 6', 'case': 'Case', scm_ch1: 'SCM Ch 1', scm_ch2: 'SCM Ch 2', scm_ch3: 'SCM Ch 3', scm_ch5: 'SCM Ch 5', scm_ch9: 'SCM Ch 9', scm_ch11: 'SCM Ch 11' };
   function courseOff() { try { return localStorage.getItem(OFF) === '1'; } catch (e) { return false; } }
+  function weeksOn() { try { var w = JSON.parse(localStorage.getItem(WK)); if (Array.isArray(w)) return w; } catch (e) {} return ['fin_w1']; }
   function installCourse() {
-    var D = root.FSM_COURSE_CARDS; if (!D || courseOff()) return 0;
-    var a = load(), have = {}; a.forEach(function (c) { have[c.id] = 1; });
-    var newOnes = D.cards.filter(function (c) { return !have[c.id]; }); if (!newOnes.length) return 0;
-    var base = Date.now() - 1000;
-    newOnes.forEach(function (c, i) { a.push({ id: c.id, front: c.front, back: c.back, page: c.page, title: c.title, deck: 'course', box: 0, due: base + Math.floor(i / PER_DAY) * DAY + i, t: Date.now(), n: 0 }); });
-    try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {}
+    var D = root.FSM_COURSE_CARDS; if (!D) return 0;
+    var on = courseOff() ? [] : weeksOn(), a = load(), changed = false;
+    // cards of weeks you haven't reached yet (and never studied) are taken out again
+    a = a.filter(function (c) { var keep = c.deck !== 'course' || c.n || on.indexOf(c.page) >= 0; if (!keep) changed = true; return keep; });
+    var have = {}; a.forEach(function (c) { have[c.id] = 1; });
+    var newOnes = D.cards.filter(function (c) { return !have[c.id] && on.indexOf(c.page) >= 0; });
+    newOnes.sort(function (x, y) { return PAGES.indexOf(x.page) - PAGES.indexOf(y.page); }); // stable: keeps the order inside a week
+    var base = Date.now() - 100000;
+    newOnes.forEach(function (c, i) { a.push({ id: c.id, front: c.front, back: c.back, page: c.page, title: c.title, deck: 'course', box: 0, due: base + i, t: Date.now(), n: 0 }); });
+    if (changed || newOnes.length) try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {}
     return newOnes.length;
   }
   C.course = {
     on: function () { return !!root.FSM_COURSE_CARDS && !courseOff(); },
     total: function () { return root.FSM_COURSE_CARDS ? root.FSM_COURSE_CARDS.cards.length : 0; },
+    countFor: function (p) { return root.FSM_COURSE_CARDS ? root.FSM_COURSE_CARDS.cards.filter(function (c) { return c.page === p; }).length : 0; },
+    pages: PAGES, label: LABEL,
+    weeks: weeksOn,
+    setWeek: function (p, yes) { var w = weeksOn().filter(function (x) { return x !== p; }); if (yes) w.push(p); try { localStorage.setItem(WK, JSON.stringify(w)); } catch (e) {} installCourse(); listeners.forEach(function (f) { f(); }); },
     remove: function () { try { localStorage.setItem(OFF, '1'); } catch (e) {} C.removeDeck('course'); },
-    restore: function () { try { localStorage.removeItem(OFF); } catch (e) {} installCourse(); listeners.forEach(function (f) { f(); }); },
-    perDay: PER_DAY
+    restore: function () { try { localStorage.removeItem(OFF); } catch (e) {} installCourse(); listeners.forEach(function (f) { f(); }); }
   };
   installCourse();
 
