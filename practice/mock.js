@@ -125,7 +125,8 @@
   /* ---------- home ---------- */
   function home() {
     var sc = estScore(), next = TYPES.filter(function (t) { return !t.extra && !mastered(t.id); })[0];
-    var h = '<h1>Exam questions</h1><p class="muted">Every question type from the two mock exams, worded exactly like the mock. You get new numbers each time, so you learn the method, not the answer. Do one question, check it, mark your written parts, save, and move on.</p>';
+    var due = window.FSMCards ? window.FSMCards.due().length : 0;
+    var h = (due ? '<div class="mnote" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-soft)"><span>🃏 <b>' + due + '</b> flashcard' + (due === 1 ? ' is' : 's are') + ' due for review (≈ ' + Math.max(1, Math.round(due * 0.4)) + ' min).</span><button type="button" id="homeRev">Review now</button></div>' : '') + '<h1>Exam questions</h1><p class="muted">Every question type from the two mock exams, worded exactly like the mock. You get new numbers each time, so you learn the method, not the answer. Do one question, check it, mark your written parts, save, and move on.</p>';
     h += '<div class="hero2"><div class="card score-card"><div class="small muted">Estimated exam score</div><div><span class="big">' + sc + '</span><span class="muted"> / 100</span></div>' +
       '<div class="meter-bar big-bar"><span class="meter-fill" style="width:' + sc + '%"></span><span class="tick" style="left:55%"><i>55 pass</i></span><span class="tick" style="left:70%"><i>70 safe</i></span></div>' +
       '<p class="small" style="margin-top:22px">' + (sc >= 70 ? 'Above a safe 70. Now do a full mock under time pressure.' : sc >= 55 ? 'You\'d pass. ' + (70 - sc) + ' more points to a safe 70.' : (55 - sc) + ' points to a pass, ' + (70 - sc) + ' to a safe 70.') + '</p></div>' +
@@ -143,6 +144,7 @@
       TYPES.filter(function (t) { return t.extra; }).map(function (t) { var a = att(t.id), last = a[a.length - 1], m = mastered(t.id); return '<a class="plan-row qrow' + (m ? ' done' : '') + '" href="#q=' + t.id + '"><span class="idx">Q' + t.slot + '</span><div class="t"><b>' + esc(t.title) + '</b><span>Could replace mock Q' + t.slot + ' · ' + SLOT_PTS[t.slot] + ' points' + (last ? ' · last score ' + Math.round(last.s * 100) + '%' : '') + '</span></div><span class="go">' + (m ? '<span class="status mastered">Mastered</span>' : dots(t.id)) + '<span class="btn ghost">Practise</span></span></a>'; }).join('') + '</div>';
     h += '<div class="grid2"><a class="card topic-card" href="case.html"><h3>Full mock exam (2 hours)</h3><div class="small muted">The two official mocks or a new case with all 9 questions and a timer.</div></a><a class="card topic-card" href="skills.html"><h3>Extra drills per topic</h3><div class="small muted">Short questions on single skills, if you want to train one step (for example only the DFL).</div></a></div>';
     view.innerHTML = h;
+    var hr = document.getElementById('homeRev'); if (hr) hr.onclick = function () { window.FSMCards.review(); };
     refreshMeter();
   }
 
@@ -220,6 +222,7 @@
     if (m && byId[m[1]]) showQ(m[1], m[2]); else home();
   }
   window.addEventListener('hashchange', route);
+  if (window.FSMCards) window.FSMCards.onChange(function () { if (!/^#?q=/.test(location.hash)) home(); });
   window.FSM_MOCK = { TYPES: TYPES, buildQuestion: buildQuestion, findCase: findCase };
   refreshMeter();
   route();

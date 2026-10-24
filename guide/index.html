@@ -8,8 +8,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="../shared/style.css?v=202610241816">
-<link rel="stylesheet" href="guide.css?v=202610241816">
+<link rel="stylesheet" href="../shared/style.css?v=202610241821">
+<link rel="stylesheet" href="guide.css?v=202610241821">
 </head>
 <body>
 <header class="topbar">
@@ -19,6 +19,7 @@
   <nav>
     <a href="#books">My books</a>
     <a href="#notes">My notes</a>
+    <a href="#cards">Flashcards</a>
     <a href="../practice/case.html">Case exam</a>
     <a href="../practice/index.html">Practice →</a>
     <button class="ghost icon" id="themeBtn" type="button" aria-label="Toggle dark mode">☾</button>
@@ -30,41 +31,42 @@
 </div>
 <div id="scrim" class="scrim"></div>
 
-<script src="../shared/rng.js?v=202610241816"></script>
-<script src="../shared/format.js?v=202610241816"></script>
-<script src="../shared/formula-sheet.js?v=202610241816"></script>
-<script src="../practice/engine.js?v=202610241816"></script>
-<script src="../practice/gen-helpers.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w1_markets.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w2_ratios.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w3_wcm_credit.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w3_book.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w4_shortterm_rates.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w4_book.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w5_leverage_wacc.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w5_book.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w6_intl_consolidation.js?v=202610241816"></script>
-<script src="../practice/generators/fin_w6_book.js?v=202610241816"></script>
-<script src="../practice/generators/fin_case_noordzee.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch1_overview.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch2_global.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch1_2_book.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch3_logistics.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch5_sourcing.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch5_book.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch9_inventory.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch9_book.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch11_transport.js?v=202610241816"></script>
-<script src="../practice/generators/scm_ch11_book.js?v=202610241816"></script>
-<script src="../practice/generators/mock_style.js?v=202610241816"></script>
-<script src="../practice/generators/fin_slides.js?v=202610241816"></script>
-<script src="../practice/generators/scm_slides.js?v=202610241816"></script>
-<script src="content/finance.js?v=202610241816"></script>
-<script src="content/scm.js?v=202610241816"></script>
-<script src="content/extra.js?v=202610241816"></script>
-<script src="content/summaries.js?v=202610241816"></script>
-<script src="reader.js?v=202610241816"></script>
-<script src="../shared/notes.js?v=202610241816"></script>
-<script src="guide.js?v=202610241816"></script>
+<script src="../shared/rng.js?v=202610241821"></script>
+<script src="../shared/format.js?v=202610241821"></script>
+<script src="../shared/formula-sheet.js?v=202610241821"></script>
+<script src="../practice/engine.js?v=202610241821"></script>
+<script src="../practice/gen-helpers.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w1_markets.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w2_ratios.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w3_wcm_credit.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w3_book.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w4_shortterm_rates.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w4_book.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w5_leverage_wacc.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w5_book.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w6_intl_consolidation.js?v=202610241821"></script>
+<script src="../practice/generators/fin_w6_book.js?v=202610241821"></script>
+<script src="../practice/generators/fin_case_noordzee.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch1_overview.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch2_global.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch1_2_book.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch3_logistics.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch5_sourcing.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch5_book.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch9_inventory.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch9_book.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch11_transport.js?v=202610241821"></script>
+<script src="../practice/generators/scm_ch11_book.js?v=202610241821"></script>
+<script src="../practice/generators/mock_style.js?v=202610241821"></script>
+<script src="../practice/generators/fin_slides.js?v=202610241821"></script>
+<script src="../practice/generators/scm_slides.js?v=202610241821"></script>
+<script src="content/finance.js?v=202610241821"></script>
+<script src="content/scm.js?v=202610241821"></script>
+<script src="content/extra.js?v=202610241821"></script>
+<script src="content/summaries.js?v=202610241821"></script>
+<script src="reader.js?v=202610241821"></script>
+<script src="../shared/cards.js?v=202610241821"></script>
+<script src="../shared/notes.js?v=202610241821"></script>
+<script src="guide.js?v=202610241821"></script>
 </body>
 </html>

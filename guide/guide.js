@@ -24,9 +24,11 @@
   byId.formulas = { id: 'formulas', group: 'Start', title: 'Formula sheet', special: 'formulas' };
   byId.glossary = { id: 'glossary', group: 'Start', title: 'Glossary', special: 'glossary' };
   byId.notes = { id: 'notes', group: 'Start', title: 'My notes', special: 'notes' };
+  byId.cards = { id: 'cards', group: 'Start', title: 'Flashcards', special: 'cards' };
+  var FC = window.FSMCards;
   var NT = window.FSMNotes;
   var NAV = [
-    { g: 'Start', ids: ['start', 'notes', 'books', 'formulas', 'glossary'] },
+    { g: 'Start', ids: ['start', 'notes', 'cards', 'books', 'formulas', 'glossary'] },
     { g: 'Managerial Finance · 70%', ids: ['fin_w1', 'fin_w2', 'fin_w3', 'fin_w4', 'fin_w5', 'fin_w6', 'case', 'exam'] },
     { g: 'Supply Chain Management · 30%', ids: ['scm_ch1', 'scm_ch2', 'scm_ch3', 'scm_ch5', 'scm_ch9', 'scm_ch11'] }
   ];
@@ -35,16 +37,18 @@
 
   function renderSidebar(cur) {
     var n = STUDY.filter(function (id) { return done['page:' + id]; }).length;
-    var h = '<div class="prog small muted">' + n + ' / ' + STUDY.length + ' sections done</div><div class="prog bar"><i style="width:' + Math.round(100 * n / STUDY.length) + '%"></i></div>';
+    var dueN = FC.due().length;
+    var h = (dueN ? '<button type="button" class="due-banner" id="sbReview">🃏 <b>' + dueN + '</b> flashcard' + (dueN === 1 ? '' : 's') + ' due · review now</button>' : '') + '<div class="prog small muted">' + n + ' / ' + STUDY.length + ' sections done</div><div class="prog bar"><i style="width:' + Math.round(100 * n / STUDY.length) + '%"></i></div>';
     var cnt = {}; NT.all().forEach(function (x) { cnt[x.page] = (cnt[x.page] || 0) + 1; });
     NAV.forEach(function (sec) {
       h += '<h4>' + sec.g + '</h4>';
       sec.ids.forEach(function (id) {
         var p = byId[id]; if (!p) return;
-        h += '<a href="#' + id + '" class="' + (id === cur ? 'active' : '') + '"><span><span class="wk">' + esc(p.label || '') + '</span> ' + esc(p.title) + '</span>' + '<span>' + (id === 'notes' ? (NT.all().length ? '<span class="ncount">' + NT.all().length + '</span>' : '') : (cnt[id] ? '<span class="ncount" title="Your notes">✎' + cnt[id] + '</span>' : '')) + (done['page:' + id] ? '<span class="done">✓</span>' : '') + '</span></a>';
+        h += '<a href="#' + id + '" class="' + (id === cur ? 'active' : '') + '"><span><span class="wk">' + esc(p.label || '') + '</span> ' + esc(p.title) + '</span>' + '<span>' + (id === 'cards' ? (FC.due().length ? '<span class="ndue">' + FC.due().length + ' due</span>' : (FC.all().length ? '<span class="ncount">' + FC.all().length + '</span>' : '')) : id === 'notes' ? (NT.all().length ? '<span class="ncount">' + NT.all().length + '</span>' : '') : (cnt[id] ? '<span class="ncount" title="Your notes">✎' + cnt[id] + '</span>' : '')) + (done['page:' + id] ? '<span class="done">✓</span>' : '') + '</span></a>';
       });
     });
     side.innerHTML = h;
+    var sbr = document.getElementById('sbReview'); if (sbr) sbr.onclick = function () { closeMenu(); FC.review(); };
   }
   function closeMenu() { side.classList.remove('open'); scrim.classList.remove('open'); }
   document.getElementById('menuBtn').onclick = function () { side.classList.add('open'); scrim.classList.add('open'); };
@@ -297,6 +301,69 @@
     renderSidebar(byId[hsh] ? hsh : '');
   });
 
+  /* ---------- flashcards page ---------- */
+  var cardFilter = '';
+  function renderCards() {
+    var all = FC.all(), due = FC.due(), now = Date.now();
+    var soon = all.filter(function (c) { return c.due > now && c.due < now + 7 * 86400000; }).length;
+    var hasF = all.some(function (c) { return c.deck === 'formulas'; }), hasG = all.some(function (c) { return c.deck === 'glossary'; });
+    var h = '<div class="crumb">Start</div><h1>Flashcards</h1><p class="muted">Make a card for anything you keep forgetting: a formula, a definition, a trap. Each card comes back right before you would forget it: after 1, 3, 7, 14 and 30 days if you know it, within minutes if you don\'t. When cards are due, you see it on the ✎ Notes button and in the sidebar, on every page.</p>';
+    h += '<div class="cards-stats"><div class="card"><div class="big-n">' + due.length + '</div><div class="small muted">due now</div></div><div class="card"><div class="big-n">' + soon + '</div><div class="small muted">due this week</div></div><div class="card"><div class="big-n">' + all.length + '</div><div class="small muted">cards in total</div></div></div>';
+    h += '<div class="btnrow notes-btns">' + (due.length ? '<button type="button" id="cRev">Review ' + due.length + ' due card' + (due.length === 1 ? '' : 's') + ' (≈ ' + Math.max(1, Math.round(due.length * 0.4)) + ' min)</button>' : '<button type="button" disabled>Nothing due right now ✓</button>') + '<button type="button" class="ghost" id="cAdd">＋ New card</button></div>';
+    h += '<div class="card"><b>Ready-made decks</b> <span class="small muted">(optional: they mix in with your own cards, 20 new cards a day so it never piles up)</span><div class="btnrow notes-btns" style="margin-top:8px">' +
+      (hasF ? '<button type="button" class="ghost" data-rm="formulas">Remove formula-sheet deck</button>' : '<button type="button" class="ghost" data-add="formulas">＋ Formula sheet (' + FSM.FORMULAS.reduce(function (n, g) { return n + g.items.length; }, 0) + ' cards)</button>') +
+      (hasG ? '<button type="button" class="ghost" data-rm="glossary">Remove glossary deck</button>' : '<button type="button" class="ghost" data-add="glossary">＋ Glossary terms (' + glossaryItems().length + ' cards)</button>') + '</div></div>';
+    h += '<div class="notes-tools"><input type="search" id="cfilter" placeholder="Search your cards…" value="' + esc(cardFilter) + '"></div><div id="clist"></div>';
+    h += '<div class="btnrow notes-btns"><button type="button" class="ghost" id="cBak"' + (all.length ? '' : ' disabled') + '>Download backup</button><label class="btn ghost">Restore backup<input type="file" accept=".json,application/json" id="cRes" hidden></label></div><div class="callout info"><b>Your cards stay in this browser</b>Use Download backup / Restore backup to move them to your phone or laptop (the same way as your notes).</div>';
+    pageEl.innerHTML = h;
+    function draw() {
+      var q = cardFilter.toLowerCase(), groups = {}, order = [];
+      FC.all().filter(function (c) { return !q || (c.front + ' ' + c.back + ' ' + c.title).toLowerCase().indexOf(q) >= 0; }).sort(function (a, b) { return a.due - b.due; }).forEach(function (c) {
+        var k = c.deck === 'mine' ? c.page : 'deck:' + c.deck; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(c);
+      });
+      var label = function (k) { return k === 'deck:formulas' ? 'Formula-sheet deck' : k === 'deck:glossary' ? 'Glossary deck' : byId[k] ? (byId[k].label ? byId[k].label + ' · ' : '') + byId[k].title : (groups[k][0].title || 'General'); };
+      document.getElementById('clist').innerHTML = order.length ? order.map(function (k) {
+        var g = groups[k];
+        return '<details class="cgroup"' + (order.length <= 3 || k.indexOf('deck:') ? ' open' : '') + '><summary><b>' + esc(label(k)) + '</b> <span class="small muted">(' + g.length + (g.filter(function (c) { return c.due <= Date.now(); }).length ? ', ' + g.filter(function (c) { return c.due <= Date.now(); }).length + ' due' : '') + ')</span></summary>' +
+          g.slice(0, 200).map(function (c) { return '<div class="nt-note" data-cid="' + c.id + '"><div class="nt-body"><b>' + FC.fmt(c.front) + '</b><div class="muted" style="margin-top:4px">' + FC.fmt(c.back) + '</div></div><div class="nt-meta"><span>' + (c.due <= Date.now() ? '<b style="color:var(--warn)">due now</b>' : 'next ' + FC.whenText(c.due)) + (c.n ? ' · reviewed ' + c.n + '×' : '') + '</span><span><button type="button" class="ghost c-edit">Edit</button> <button type="button" class="ghost c-del">Delete</button></span></div></div>'; }).join('') + (g.length > 200 ? '<p class="small muted">…and ' + (g.length - 200) + ' more (use search).</p>' : '') + '</details>';
+      }).join('') : (FC.all().length ? '<p class="muted">No cards match.</p>' : '<div class="card"><b>No cards yet.</b><p class="small muted" style="margin:6px 0 0">Tap <b>＋ New card</b>, select text on any page and tap <b>＋ Flashcard</b>, or turn a note into a card with <b>→ Card</b>.</p></div>');
+      pageEl.querySelectorAll('.c-del').forEach(function (b) { b.onclick = function () { FC.remove(b.closest('[data-cid]').getAttribute('data-cid')); }; });
+      pageEl.querySelectorAll('.c-edit').forEach(function (b) { b.onclick = function () {
+        var el = b.closest('[data-cid]'), id = el.getAttribute('data-cid'), c = FC.all().filter(function (x) { return x.id === id; })[0]; if (!c) return;
+        el.querySelector('.nt-body').innerHTML = '<label class="small muted">Front</label><textarea class="ce-f" style="width:100%;box-sizing:border-box;min-height:50px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)"></textarea><label class="small muted">Back</label><textarea class="ce-b" style="width:100%;box-sizing:border-box;min-height:70px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)"></textarea><div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="ce-s">Save</button><button type="button" class="ghost ce-x">Cancel</button></div>';
+        el.querySelector('.ce-f').value = c.front; el.querySelector('.ce-b').value = c.back;
+        el.querySelector('.ce-s').onclick = function () { FC.update(id, { front: el.querySelector('.ce-f').value.trim(), back: el.querySelector('.ce-b').value.trim() }); };
+        el.querySelector('.ce-x').onclick = draw;
+      }; });
+    }
+    draw();
+    document.getElementById('cfilter').oninput = function (e) { cardFilter = e.target.value; draw(); };
+    var rv = document.getElementById('cRev'); if (rv) rv.onclick = function () { FC.review(); };
+    document.getElementById('cAdd').onclick = function () { NT.openCard({}); };
+    pageEl.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () {
+      var d = b.getAttribute('data-add'), list = [];
+      if (d === 'formulas') FSM.FORMULAS.forEach(function (g) { g.items.forEach(function (it) { list.push({ front: 'Formula: ' + it[0] + '?', back: it[1], deck: 'formulas', title: 'Formula sheet · ' + g.group }); }); });
+      else glossaryItems().forEach(function (x) { list.push({ front: 'What is “' + x.term + '”?', back: x.def, deck: 'glossary', title: 'Glossary · ' + x.where }); });
+      FC.addMany(list);
+    }; });
+    pageEl.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { if (confirm('Remove this deck (and its review progress)? Your own cards stay.')) FC.removeDeck(b.getAttribute('data-rm')); }; });
+    document.getElementById('cBak').onclick = function () { download('fsm-flashcards-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(FC.all(), null, 1), 'application/json'); };
+    document.getElementById('cRes').onchange = function (e) {
+      var f = e.target.files[0]; if (!f) return;
+      f.text().then(function (txt) {
+        var inc = JSON.parse(txt); if (!Array.isArray(inc)) throw new Error('bad');
+        var cur = FC.all(), have = {}; cur.forEach(function (c) { have[c.id] = 1; });
+        var added = 0; inc.forEach(function (c) { if (c && c.id && typeof c.front === 'string' && !have[c.id]) { cur.push(c); added++; } });
+        FC.replaceAll(cur); alert(added + ' card' + (added === 1 ? '' : 's') + ' restored.');
+      }).catch(function () { alert('That file is not a flashcards backup.'); });
+    };
+  }
+  FC.onChange(function () {
+    var hsh = decodeURIComponent(location.hash.replace(/^#/, '')) || 'start';
+    if (hsh === 'cards') { var f = document.activeElement && document.activeElement.id === 'cfilter'; renderCards(); if (f) { var el = document.getElementById('cfilter'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+    renderSidebar(byId[hsh] ? hsh : '');
+  });
+
   /* ---------- search ---------- */
   function strip(html) { return String(html || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' '); }
   var INDEX = ORDER.filter(function (id) { return byId[id] && !byId[id].special || id === 'exam' || id === 'start'; }).map(function (id) {
@@ -339,8 +406,9 @@
     else if (p.special === 'formulas') renderFormulas();
     else if (p.special === 'glossary') renderGlossary();
     else if (p.special === 'notes') renderNotes();
+    else if (p.special === 'cards') renderCards();
     else renderStudyPage(p);
-    if (p.special === 'notes' || p.special === 'books') NT.setPage('general', 'General notes'); else NT.setPage(p.id, (p.label ? p.label + ' · ' : '') + p.title);
+    if (p.special === 'notes' || p.special === 'books' || p.special === 'cards') NT.setPage('general', 'General notes'); else NT.setPage(p.id, (p.label ? p.label + ' · ' : '') + p.title);
     document.title = p.title + ' · FSM Study Guide';
   }
   window.addEventListener('hashchange', function () { route(); window.scrollTo(0, 0); });
