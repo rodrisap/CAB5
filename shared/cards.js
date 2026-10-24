@@ -50,7 +50,7 @@
   };
   window.addEventListener('storage', function (e) { if (e.key === KEY) listeners.forEach(function (f) { f(); }); });
 
-  /* ---------- the course deck (written for this exam), unlocked week by week ---------- */
+  /* ---------- the course deck (written for this exam), in week order ---------- */
   var OFF = 'fsm.cards.courseOff', WK = 'fsm.study.weeks';
   var PAGES = ['fin_w1', 'fin_w2', 'fin_w3', 'fin_w4', 'fin_w5', 'fin_w6', 'case', 'scm_ch1', 'scm_ch2', 'scm_ch3', 'scm_ch5', 'scm_ch9', 'scm_ch11'];
   var LABEL = { fin_w1: 'Week 1', fin_w2: 'Week 2', fin_w3: 'Week 3', fin_w4: 'Week 4', fin_w5: 'Week 5', fin_w6: 'Week 6', 'case': 'Case', scm_ch1: 'SCM Ch 1', scm_ch2: 'SCM Ch 2', scm_ch3: 'SCM Ch 3', scm_ch5: 'SCM Ch 5', scm_ch9: 'SCM Ch 9', scm_ch11: 'SCM Ch 11' };
@@ -58,7 +58,7 @@
   function weeksOn() { try { var w = JSON.parse(localStorage.getItem(WK)); if (Array.isArray(w)) return w; } catch (e) {} return ['fin_w1']; }
   function installCourse() {
     var D = root.FSM_COURSE_CARDS; if (!D) return 0;
-    var on = courseOff() ? [] : weeksOn(), a = load(), changed = false;
+    var on = courseOff() ? [] : PAGES, a = load(), changed = false;
     // cards of weeks you haven't reached yet (and never studied) are taken out again
     a = a.filter(function (c) { var keep = c.deck !== 'course' || c.n || on.indexOf(c.page) >= 0; if (!keep) changed = true; return keep; });
     var have = {}; a.forEach(function (c) { have[c.id] = 1; });

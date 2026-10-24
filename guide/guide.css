@@ -118,3 +118,5 @@ details.cgroup .nt-note { margin-top: 8px; }
 .weekpick .wk { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; font-size: .9rem; cursor: pointer; background: var(--bg); }
 .weekpick .wk.on { border-color: var(--accent); background: var(--accent-soft); }
 .weekpick .wk small { color: var(--muted); }
+.weekpick button.wk { min-height: 0; color: var(--text); }
+.weekpick button.wk:disabled { opacity: .55; }
