@@ -41,6 +41,25 @@
     { id: 'q9-tlc', slot: 9, mocks: [1], v: 'tlc', title: 'Total landed cost: explain + calculate', guide: 'scm_ch5' },
     { id: 'q9-mode', slot: 9, mocks: [2], v: 'mode', title: 'Choose 2 transport modes; distant supplier → inventory', guide: 'scm_ch11' }
   ];
+  // Other course topics written in the same exam style; any of these could replace a mock question in the real exam.
+  [['q1', 'ratios', 'Financial ratios from the statements (current ratio, turnover, ROE, EPS, P/E…)', 'fin_w2', 1],
+   ['q1', 'taxforms', 'Sole proprietor vs corporation: tax and liability', 'fin_w1'],
+   ['q1', 'cashaccrual', 'Cash vs accrual: profit vs cash flow', 'fin_w1'],
+   ['q2', 'opcycle', 'Operating cycle + CCC from AAI, ACP, APP', 'fin_w3', 1],
+   ['q3', 'discount', 'Introducing an early-payment discount', 'fin_w3'],
+   ['q3', 'payables', 'Accounts payable: take the discount or pay late?', 'fin_w4'],
+   ['q4', 'epsforecast', 'EPS at different EBIT levels + DFL', 'fin_w5', 1],
+   ['q5', 'fx', 'Exchange rates + forward contract', 'fin_w6'],
+   ['q5', 'equity', 'Investments in other companies (equity method)', 'fin_w6'],
+   ['q6', 'full', 'Full consolidation from two balance sheets', 'fin_w6'],
+   ['q7', 'utilities', 'Value-added roles (utilities) of logistics', 'scm_ch3'],
+   ['q7', 'approaches', 'Inventory approaches: JIT, EOQ, MRP, DRP, VMI', 'scm_ch9'],
+   ['q8', 'quadrant', 'Types of purchases (quadrant technique)', 'scm_ch5'],
+   ['q8', 'abc', 'ABC inventory classification', 'scm_ch9'],
+   ['q9', 'fob', 'Terms of sale (FOB origin vs destination)', 'scm_ch11'],
+   ['q9', 'scorecard', 'Carrier performance scorecard', 'scm_ch11']].forEach(function (e) {
+    TYPES.push({ id: e[0] + '-' + e[1], slot: +e[0].slice(1), mocks: [], extra: true, v: e[1], title: e[2], guide: e[3], needCase: !!e[4] });
+  });
   var SLOT_PTS = { 1: 10, 2: 10, 3: 15, 4: 15, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10 };
   var byId = {}; TYPES.forEach(function (t) { byId[t.id] = t; });
   var NEED = 2, PASS = 0.9; // mastered = last 2 attempts each ≥ 90%, new numbers every time
@@ -67,7 +86,7 @@
   }
 
   /* ---------- grading (same rules as the case exam) ---------- */
-  function unitHint(f) { return f.unit === 'pct' ? 'e.g. 7.23%' : f.unit === 'days' ? 'days' : f.unit === 'x' ? 'times' : f.unit === 'cur' ? '€' : '€m'; }
+  function unitHint(f) { return f.unit === 'pct' ? 'e.g. 7.23%' : f.unit === 'days' ? 'days' : f.unit === 'x' ? 'times' : f.unit === 'cur' ? '€' : /€ ?m|million/i.test(f.label) ? '€m' : ''; }
   function fmtAns(f) { return f.unit === 'pct' ? F.num(f.ans * 100, 2) + '%' : f.unit === 'cur' ? '€' + F.num(f.ans, f.dp || 0) : F.num(f.ans, f.dp === undefined ? 2 : f.dp); }
   function gradeField(f, val) {
     if (val === '' || val === undefined) return false;
@@ -92,7 +111,7 @@
   function estScore() {
     var tot = 0;
     Object.keys(SLOT_PTS).forEach(function (sl) {
-      var ts = TYPES.filter(function (t) { return t.slot === +sl; }), m = ts.filter(function (t) { return mastered(t.id); }).length;
+      var ts = TYPES.filter(function (t) { return t.slot === +sl && !t.extra; }), m = ts.filter(function (t) { return mastered(t.id); }).length;
       tot += SLOT_PTS[sl] * m / ts.length;
     });
     return Math.round(tot);
@@ -105,7 +124,7 @@
 
   /* ---------- home ---------- */
   function home() {
-    var sc = estScore(), next = TYPES.filter(function (t) { return !mastered(t.id); })[0];
+    var sc = estScore(), next = TYPES.filter(function (t) { return !t.extra && !mastered(t.id); })[0];
     var h = '<h1>Exam questions</h1><p class="muted">Every question type from the two mock exams, worded exactly like the mock. You get new numbers each time, so you learn the method, not the answer. Do one question, check it, mark your written parts, save, and move on.</p>';
     h += '<div class="hero2"><div class="card score-card"><div class="small muted">Estimated exam score</div><div><span class="big">' + sc + '</span><span class="muted"> / 100</span></div>' +
       '<div class="meter-bar big-bar"><span class="meter-fill" style="width:' + sc + '%"></span><span class="tick" style="left:55%"><i>55 pass</i></span><span class="tick" style="left:70%"><i>70 safe</i></span></div>' +
@@ -114,12 +133,14 @@
       (next ? '<a class="btn" href="#q=' + next.id + '">Next: Q' + next.slot + ' · ' + esc(next.title) + ' →</a>' : '<a class="btn" href="case.html">All mastered: do a full mock exam →</a>') + '</div></div>';
     [['fin', 'Managerial Finance · Q1–6 · 70 points', [1, 2, 3, 4, 5, 6]], ['scm', 'Supply Chain Management · Q7–9 · 30 points', [7, 8, 9]]].forEach(function (g) {
       h += '<h2 class="section-title">' + g[1] + '</h2><div class="card plan-list">';
-      TYPES.filter(function (t) { return g[2].indexOf(t.slot) >= 0; }).forEach(function (t) {
+      TYPES.filter(function (t) { return !t.extra && g[2].indexOf(t.slot) >= 0; }).forEach(function (t) {
         var a = att(t.id), last = a[a.length - 1], m = mastered(t.id), mins = Math.round(SLOT_PTS[t.slot] * 1.2);
         h += '<a class="plan-row qrow' + (m ? ' done' : '') + '" href="#q=' + t.id + '"><span class="idx">Q' + t.slot + '</span><div class="t"><b>' + esc(t.title) + '</b><span>Mock ' + t.mocks.join(' & ') + ' · ' + SLOT_PTS[t.slot] + ' points · ≈ ' + mins + ' min in the exam' + (last ? ' · last score ' + Math.round(last.s * 100) + '%' : '') + '</span></div><span class="go">' + (m ? '<span class="status mastered">Mastered</span>' : dots(t.id)) + '<span class="btn ghost">Practise</span></span></a>';
       });
       h += '</div>';
     });
+    h += '<h2 class="section-title">Also possible: other topics from the slides &amp; book</h2><p class="small muted" style="margin-top:-4px">The mocks only show one version of each question. The real exam can swap a question for another topic from the same week, asked in the same style. These are written that way. Do them after the mock questions; they don\'t change the score above.</p><div class="card plan-list">' +
+      TYPES.filter(function (t) { return t.extra; }).map(function (t) { var a = att(t.id), last = a[a.length - 1], m = mastered(t.id); return '<a class="plan-row qrow' + (m ? ' done' : '') + '" href="#q=' + t.id + '"><span class="idx">Q' + t.slot + '</span><div class="t"><b>' + esc(t.title) + '</b><span>Could replace mock Q' + t.slot + ' · ' + SLOT_PTS[t.slot] + ' points' + (last ? ' · last score ' + Math.round(last.s * 100) + '%' : '') + '</span></div><span class="go">' + (m ? '<span class="status mastered">Mastered</span>' : dots(t.id)) + '<span class="btn ghost">Practise</span></span></a>'; }).join('') + '</div>';
     h += '<div class="grid2"><a class="card topic-card" href="case.html"><h3>Full mock exam (2 hours)</h3><div class="small muted">The two official mocks or a new case with all 9 questions and a timer.</div></a><a class="card topic-card" href="skills.html"><h3>Extra drills per topic</h3><div class="small muted">Short questions on single skills, if you want to train one step (for example only the DFL).</div></a></div>';
     view.innerHTML = h;
     refreshMeter();
@@ -134,8 +155,8 @@
     cur = { t: t, b: b, src: src, A: { answers: {}, notes: {}, self: {} }, checked: false, saved: false, started: Date.now() };
     var q = b.q, pts = qPoints(q), mins = Math.round(SLOT_PTS[t.slot] * 1.2);
     var h = '<p class="small"><a href="#home">← All exam questions</a></p>';
-    h += '<div class="qhead2"><div><div class="small muted">Mock ' + t.mocks.join(' & ') + ' · question ' + t.slot + ' · ' + pts + ' points · aim for ≈ ' + mins + ' min</div><h1 style="margin:2px 0 0">Q' + t.slot + '. ' + esc(q.title) + '</h1></div><div class="qstat">' + (mastered(id) ? '<span class="status mastered">Mastered</span>' : dots(id) + ' <span class="small muted">' + streak(id) + ' / ' + NEED + ' in a row</span>') + '</div></div>';
-    h += '<div class="srcrow small">' + (typeof src === 'string' ? '<b>Original numbers from Mock ' + src.slice(-1) + '</b>' : 'New numbers · version ' + b.seed) + ' · ' + t.mocks.map(function (m) { return '<a href="#q=' + id + '&src=mock' + m + '">Original Mock ' + m + ' version</a>'; }).join(' · ') + ' · <a href="../guide/index.html#' + t.guide + '">Study the method</a></div>';
+    h += '<div class="qhead2"><div><div class="small muted">' + (t.extra ? 'From the slides & book (could replace a mock question)' : 'Mock ' + t.mocks.join(' & ')) + ' · question ' + t.slot + ' · ' + pts + ' points · aim for ≈ ' + mins + ' min</div><h1 style="margin:2px 0 0">Q' + t.slot + '. ' + esc(q.title) + '</h1></div><div class="qstat">' + (mastered(id) ? '<span class="status mastered">Mastered</span>' : dots(id) + ' <span class="small muted">' + streak(id) + ' / ' + NEED + ' in a row</span>') + '</div></div>';
+    h += '<div class="srcrow small">' + (typeof src === 'string' ? '<b>Original numbers from Mock ' + src.slice(-1) + '</b>' : 'New numbers · version ' + b.seed) + ' · ' + t.mocks.map(function (m) { return '<a href="#q=' + id + '&src=mock' + m + '">Original Mock ' + m + ' version</a> · '; }).join('') + '<a href="../guide/index.html#' + t.guide + '">Study the method</a></div>';
     h += '<details class="casebox"' + (t.needCase ? ' open' : '') + '><summary><b>Case: ' + esc(b.d.name) + '</b> <span class="small muted">(' + (t.needCase ? 'you need numbers from here' : 'company background; the question below has the data you need') + ')</span></summary><div class="casedoc">' + b.html + '</div></details>';
     h += '<div class="card q" id="qcard">' + (q.intro ? '<div class="qintro">' + q.intro + '</div>' : '') + q.parts.map(partHTML).join('') +
       '<div class="btnrow" id="qbtns"><button type="button" id="checkBtn">Check</button><button type="button" class="ghost" id="giveUp">Show the solution</button></div><div id="resBox"></div></div>';

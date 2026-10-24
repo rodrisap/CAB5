@@ -95,7 +95,7 @@
     }
     return h + '</div>';
   }
-  function unitHint(f) { return f.unit === 'pct' ? 'e.g. 7.23%' : f.unit === 'days' ? 'days' : f.unit === 'x' ? 'times' : f.unit === 'cur' ? '€' : '€m'; }
+  function unitHint(f) { return f.unit === 'pct' ? 'e.g. 7.23%' : f.unit === 'days' ? 'days' : f.unit === 'x' ? 'times' : f.unit === 'cur' ? '€' : /€ ?m|million/i.test(f.label) ? '€m' : ''; }
   function fmtAns(f) { return f.unit === 'pct' ? F.num(f.ans * 100, 2) + '%' : f.unit === 'cur' ? '€' + F.num(f.ans, f.dp || 0) : F.num(f.ans, f.dp === undefined ? 2 : f.dp); }
   function gradeField(f, val) {
     if (val === '' || val === undefined) return false;
