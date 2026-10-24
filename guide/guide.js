@@ -139,7 +139,7 @@
   }
 
   /* ---------- page rendering ---------- */
-  function practiceLink(topic) { return '../practice/index.html#topic=' + topic; }
+  function practiceLink(topic) { return '../practice/skills.html#topic=' + topic; }
   function renderStudyPage(p) {
     var h = '<div class="crumb">' + esc(p.group) + (p.label ? ' · ' + esc(p.label) : '') + '</div><h1>' + esc(p.title) + '</h1>';
     if (p.html) h += p.html;
@@ -151,8 +151,11 @@
     });
     if (p.formulas && p.formulas.length) h += '<h2>Formula cards</h2>' + p.formulas.map(function (f) { return '<div class="fcard"><b>' + esc(f.n) + '</b><br><span class="f">' + esc(f.f) + '</span><div class="when"><b>When:</b> ' + esc(f.when) + '</div><div class="when"><b>Watch out:</b> ' + esc(f.trap) + '</div></div>'; }).join('');
     if (p.examples && p.examples.length) h += '<h2>Worked examples</h2><p class="small muted">Solve each one on paper first. Stuck? Reveal one step at a time. Done? Show the full solution and compare.</p>' + p.examples.map(function (e) { return exampleHTML(e.title, esc(e.q), e.steps); }).join('');
-    if (p.practice) h += '<div class="practice-cta"><div><b>Practice this</b><div class="small">Drill until every skill shows “Mastered”.</div></div><a class="btn" href="' + practiceLink(p.practice) + '">Open practice for ' + esc(p.label || p.title) + ' →</a></div>';
-    if (p.special === 'exam') h += '<div class="practice-cta"><div><b>Exam simulation</b><div class="small">Timed, mixed, formula sheet available, feedback only at the end.</div></div><a class="btn" href="../practice/index.html#exam">Start exam simulation →</a></div>';
+    var MQ = { fin_w1: [['q1-legal', 'Q1 Legal forms + effective tax (Mock 1)'], ['q1-market', 'Q1 Bid/ask + raising funds (Mock 2)']], fin_w3: [['q2-ccc', 'Q2 Cash conversion cycle + resources (Mocks 1 & 2)'], ['q3-credit', 'Q3 Relaxing the credit policy (Mock 1)']], fin_w4: [['q3-options', 'Q3 Three funding options (Mock 2)']], fin_w5: [['q4-leverage', 'Q4 DOL, DFL, DTL (Mocks 1 & 2)'], ['q5-wacc', 'Q5 WACC + project decision (Mock 1)']], fin_w6: [['q5-tax', 'Q5 Double taxation (Mock 2)'], ['q6-templates', 'Q6 Balance sheet after purchase + consolidation (Mock 1)'], ['q6-explain', 'Q6 Why eliminate + consolidation (Mock 2)']], scm_ch3: [['q7-logistics', 'Q7 Logistics definition + 7 Rs (Mock 2)']], scm_ch5: [['q8-criteria', 'Q8 Supplier selection criteria (Mock 1)'], ['q9-tlc', 'Q9 Total landed cost (Mock 1)']], scm_ch9: [['q7-inventory', 'Q7 Cutting inventory + new supplier (Mock 1)'], ['q8-supplier', 'Q8 New supplier impact (Mock 2)']], scm_ch11: [['q9-mode', 'Q9 Transport modes + distant supplier (Mock 2)']] };
+    var mq = MQ[p.id] || [];
+    if (mq.length) h += '<div class="practice-cta"><div><b>Practise the exam questions for this week</b><div class="small">Worded exactly like the mock exam, new numbers every time.</div><ul class="small" style="margin:6px 0 0;padding-left:1.2em">' + mq.map(function (m) { return '<li><a href="../practice/index.html#q=' + m[0] + '">' + esc(m[1]) + '</a></li>'; }).join('') + '</ul></div><a class="btn" href="../practice/index.html#q=' + mq[0][0] + '">Start →</a></div>';
+    if (p.practice) h += '<p class="small muted" style="margin-top:8px">Want to train one step at a time? <a href="' + practiceLink(p.practice) + '">Short topic drills for ' + esc(p.label || p.title) + '</a>.</p>';
+    if (p.special === 'exam') h += '<div class="practice-cta"><div><b>Exam simulation</b><div class="small">Timed, mixed, formula sheet available, feedback only at the end.</div></div><a class="btn" href="../practice/case.html">Start exam simulation →</a></div>';
     if (p.id !== 'start') { var mn = NT.forPage(p.id).length; h += '<div class="notes-cta"><div><b>✎ Your notes for this page</b><div class="small muted">' + (mn ? mn + ' note' + (mn === 1 ? '' : 's') + ' so far.' : 'Write the 2–3 things you want to remember, in your own words.') + '</div></div><button type="button" class="ghost" id="pgNote">' + (mn ? 'Open notes' : 'Write a note') + '</button></div>'; }
     if (p.id !== 'start') h += '<label class="check markdone"><input type="checkbox" id="pageDone"' + (done['page:' + p.id] ? ' checked' : '') + '> <b>Mark this section as done</b></label>';
     var i = ORDER.indexOf(p.id), prev = ORDER[i - 1], next = ORDER[i + 1];

@@ -131,3 +131,12 @@
   .plan-row { grid-template-columns: 24px minmax(0, 1fr) auto; }
   .plan-row .go { grid-column: 2 / -1; }
 }
+.qrow { text-decoration: none; color: inherit; }
+.qrow:hover { border-color: var(--accent); }
+.qrow .go .btn { pointer-events: none; }
+.qhead2 { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-top: 6px; }
+.srcrow { margin: 8px 0 12px; color: var(--muted); }
+details.casebox { margin: 10px 0 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+details.casebox > summary { cursor: pointer; padding: 10px 14px; }
+details.casebox .casedoc { position: static; max-height: 60vh; border: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); }
+.section-title { margin-top: 26px; }

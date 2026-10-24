@@ -34,4 +34,4 @@ Fuzzes every question generator (200 versions each) and checks known answers fro
 
 ## Deploying updates
 Script and stylesheet tags carry a `?v=` version so browsers fetch fresh files after each push. Bump it with:
-`V=$(date +%Y%m%d%H%M); sed -i -E "s#(src|href)=\"((\.\./)?[A-Za-z0-9_./-]+\.(js|css))(\?v=[0-9]+)?\"#\1=\"\2?v=$V\"#g" guide/index.html practice/index.html practice/case.html index.html`
+`V=$(date +%Y%m%d%H%M); sed -i -E "s#(src|href)=\"((\.\./)?[A-Za-z0-9_./-]+\.(js|css))(\?v=[0-9]+)?\"#\1=\"\2?v=$V\"#g" guide/index.html practice/index.html practice/skills.html practice/case.html index.html`
